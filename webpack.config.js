@@ -1,17 +1,29 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
+const HtmlPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: './src/main.js',
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'build'), //проект лежит в папке с ! в названии, не собираюсь переносить, поэтому путь прописан через 
+    filename: 'bundle.[contenthash].js',
+    path: path.resolve(__dirname, 'build'),
     clean: true,
   },
   devtool: 'source-map',
   plugins: [
+    new HtmlPlugin({
+      template: 'public/index.html',
+    }),
+
     new CopyPlugin({
-      patterns: [{ from: 'public' }],
+      patterns: [
+        {
+          from: 'public',
+          globOptions: {
+            ignore: ['**/index.html'],
+          },
+        },
+      ],
     }),
   ],  
 
