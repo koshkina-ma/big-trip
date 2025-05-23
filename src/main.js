@@ -1,15 +1,20 @@
 import ListFilterView from './view/list-filter-view.js';
-import {render} from './render.js';
+import EventsListPresenter from './presenter/event-list-presenter.js';
+import {render, RenderPosition} from './render.js';
 
-//const siteMainElement = document.querySelector('.main');
-//const siteHeaderElement = siteMainElement.querySelector('.main__control');
+
 const filtersElement = document.querySelector('.trip-controls__filters');
-const tripEventsElement = document.querySelector('.trip-events');
+const siteMainElement = document.querySelector('.trip-events');
 //const tripEventListElement = document.querySelector('.trip-events__list');
+//const tripEventsElement = document.querySelector('.trip-events');
 
-
+const eventsListPresenter = new EventsListPresenter({eventsContainer: siteMainElement});
 
 render(new ListFilterView(), filtersElement);
+
+
+eventsListPresenter.init();
+
 
 
 
