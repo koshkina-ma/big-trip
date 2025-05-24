@@ -16,7 +16,3 @@ render(new ListFilterView(), filtersElement);
 eventsListPresenter.init();
 
 
-
-
-
-

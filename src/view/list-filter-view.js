@@ -38,7 +38,7 @@ export default class ListFilterView {
   getTemplate() {
     return createListFilterTemplate();
   }
-  
+
   getElement() {
     if (!this.element) {
       this.element = createElement(this.getTemplate());
@@ -46,7 +46,7 @@ export default class ListFilterView {
     return this.element;
   }
 
-    removeElement() {
+  removeElement() {
     this.element = null;
   }
 }

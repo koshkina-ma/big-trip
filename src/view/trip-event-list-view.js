@@ -1,8 +1,9 @@
 import {createElement} from '../render.js';
 
 function createTripEventListTemplate() {
-  return ( /*html*/
-    `<ul class="trip-events__list"></ul>`
+  return (/*html*/
+    `<ul class="trip-events__list">
+    </ul>`
 
   );
 }
@@ -11,7 +12,7 @@ export default class TripEventListView {
   getTemplate() {
     return createTripEventListTemplate();
   }
-  
+
   getElement() {
     if (!this.element) {
       this.element = createElement(this.getTemplate());
@@ -19,7 +20,7 @@ export default class TripEventListView {
     return this.element;
   }
 
-    removeElement() {
+  removeElement() {
     this.element = null;
   }
 }

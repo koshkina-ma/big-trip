@@ -1,7 +1,7 @@
 import {createElement} from '../render.js';
 
 function createEditPointTemplate() {
-  return ( /*html*/
+  return (/*html*/
     `            <li class="trip-events__item">
               <form class="event event--edit" action="#" method="post">
                 <header class="event__header">
@@ -166,7 +166,7 @@ export default class EditPointView {
   getTemplate() {
     return createEditPointTemplate();
   }
-  
+
   getElement() {
     if (!this.element) {
       this.element = createElement(this.getTemplate());
@@ -174,7 +174,7 @@ export default class EditPointView {
     return this.element;
   }
 
-    removeElement() {
+  removeElement() {
     this.element = null;
   }
 }

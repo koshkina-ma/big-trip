@@ -10,7 +10,7 @@ export default class EventsListPresenter {
   eventListComponent = new TripEventListView();
 
   constructor ({eventsContainer}) {
-    this.eventsContainer= eventsContainer;
+    this.eventsContainer = eventsContainer;
   }
 
   init () {
