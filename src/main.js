@@ -1,5 +1,5 @@
 import ListFilterView from './view/list-filter-view.js';
-import EventsListPresenter from './presenter/event-list-presenter.js';
+import TripPresenter from './presenter/trip-presenter.js';
 import {render} from './render.js';
 import EventsModel from './model/events-model.js';
 
@@ -11,7 +11,7 @@ const siteMainElement = document.querySelector('.trip-events');
 
 const eventsModel = new EventsModel();
 
-const eventsListPresenter = new EventsListPresenter({
+const tripPresenter = new TripPresenter({
   eventsContainer: siteMainElement,
   eventsModel: eventsModel,
 });
@@ -21,5 +21,5 @@ const eventsListPresenter = new EventsListPresenter({
 render(new ListFilterView(), filtersElement);
 
 
-eventsListPresenter.init();
+tripPresenter.init();
 
