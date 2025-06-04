@@ -72,6 +72,7 @@ function calculateTotalCost(points) {
   }, 0);
 }
 
+
 export {
   getFormattedDate,
   formatRouteTime,
