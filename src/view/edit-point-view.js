@@ -1,4 +1,4 @@
-import {createElement} from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createEditPointTemplate(event) {
   const {
@@ -151,26 +151,16 @@ function createEditPointTemplate(event) {
   `);
 }
 
-export default class EditPointView {
-  element = null;
-  event = null;
+export default class EditPointView extends AbstractView {
+  /** @type {object} */
+  #event;
 
   constructor(event) {
-    this.event = event;
+    super();
+    this.#event = event;
   }
 
-  getTemplate() {
-    return createEditPointTemplate(this.event);
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
+  get template() {
+    return createEditPointTemplate(this.#event);
   }
 }

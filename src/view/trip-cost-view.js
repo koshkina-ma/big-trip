@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createTripCostTemplate(totalCost) {
   return /*html*/ `
@@ -8,26 +8,16 @@ function createTripCostTemplate(totalCost) {
   `;
 }
 
-export default class TripCostView {
-  element = null;
-  tripData = null;
+export default class TripCostView extends AbstractView {
+/** @type {number} */
+  #totalCost;
 
   constructor(totalCost) {
-    this.tripData = totalCost;
+    super();
+    this.#totalCost = totalCost;
   }
 
-  getTemplate() {
-    return createTripCostTemplate(this.tripData);
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
+  get template() {
+    return createTripCostTemplate(this.#totalCost);
   }
 }

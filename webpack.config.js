@@ -25,7 +25,7 @@ module.exports = {
         },
       ],
     }),
-  ],  
+  ],
 
 module: {
     rules: [
@@ -39,8 +39,12 @@ module: {
           },
         },
       },
-    ]
-  }
+      {
+        test: /\.css$/i,
+        use: ['style-loader', 'css-loader']
+      },
+    ],
+  },
 
 };
 

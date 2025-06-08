@@ -1,20 +1,12 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import { formatRouteTime, getFormattedDate } from '../utils.js';
 
-export default class TripEventItemView {
-  event;
+function createTripEventItemTemplate(event) {
+  const { basePrice, dateFrom, dateTo, destination, isFavorite, offers, type } = event;
+  const { timeRange, duration } = formatRouteTime(dateFrom, dateTo);
+  const formattedDate = getFormattedDate(dateFrom);
 
-  constructor(event) {
-    this.event = event;
-  }
-
-  getTemplate() {
-    const { basePrice, dateFrom, dateTo, destination, isFavorite, offers, type } = this.event;
-
-    const { timeRange, duration } = formatRouteTime(dateFrom, dateTo);
-    const formattedDate = getFormattedDate(dateFrom);
-
-    return (/*html*/`
+  return (/*html*/`
       <li class="trip-events__item">
         <div class="event">
           <time class="event__date" datetime="${dateFrom}">${formattedDate}</time>
@@ -54,16 +46,19 @@ export default class TripEventItemView {
         </div>
       </li>
     `);
+}
+
+
+export default class TripEventItemView extends AbstractView {
+  /** @type {object} */
+  #event;
+
+  constructor(event) {
+    super();
+    this.#event = event;
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
+  get template() {
+    return createTripEventItemTemplate(this.#event);
   }
 }

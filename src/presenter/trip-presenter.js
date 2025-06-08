@@ -7,7 +7,7 @@ import TripMainView from '../view/trip-main-view.js';
 import TripCostView from '../view/trip-cost-view.js';
 
 import {formatTripTitle, formatTripDates, calculateTotalCost} from '../utils.js';
-import {render} from '../render.js';
+import {render} from '../framework/render.js';
 
 export default class TripPresenter {
   eventListComponent = new TripEventListView();

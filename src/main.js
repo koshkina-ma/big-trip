@@ -1,6 +1,6 @@
 import ListFilterView from './view/list-filter-view.js';
 import TripPresenter from './presenter/trip-presenter.js';
-import {render} from './render.js';
+import {render} from './framework/render.js';
 import EventsModel from './model/events-model.js';
 
 const filtersElement = document.querySelector('.trip-controls__filters');

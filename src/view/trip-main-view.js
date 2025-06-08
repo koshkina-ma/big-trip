@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createTripMainTemplate({ title, dateRange }) {
   return /*html*/ `
@@ -9,26 +9,16 @@ function createTripMainTemplate({ title, dateRange }) {
   `;
 }
 
-export default class TripMainView {
-  element = null;
-  tripData = null;
+export default class TripMainView extends AbstractView {
+  #tripData;
 
   constructor({ title, dateRange }) {
-    this.tripData = { title, dateRange };
+    super();
+    this.#tripData = { title, dateRange };
   }
 
-  getTemplate() {
-    return createTripMainTemplate(this.tripData);
-  }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
+  get template() {
+    return createTripMainTemplate(this.#tripData);
   }
 }
