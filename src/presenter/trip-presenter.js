@@ -39,14 +39,14 @@ export default class TripPresenter {
     render(this.eventListComponent, this.eventsContainer);
 
     const editPointView = new EditPointView(eventItems[0]);
-    render(editPointView, this.eventListComponent.getElement());
+    render(editPointView, this.eventListComponent.element);
 
     eventItems.forEach((event) => {
-      render(new TripEventItemView(event), this.eventListComponent.getElement());
+      render(new TripEventItemView(event), this.eventListComponent.element);
     });
 
     const addNewPointView = new AddNewPointView(eventItems[1]);
-    render(addNewPointView, this.eventListComponent.getElement());
+    render(addNewPointView, this.eventListComponent.element);
   }
 
 }
