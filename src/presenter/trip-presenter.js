@@ -38,6 +38,10 @@ export default class TripPresenter {
     render(new ListSortView(), this.eventsContainer);
     render(this.eventListComponent, this.eventsContainer);
 
+    this.#renderPoints(eventItems);
+  }
+
+  #renderPoints(eventItems) {
     const editPointView = new EditPointView(eventItems[0]);
     render(editPointView, this.eventListComponent.element);
 
