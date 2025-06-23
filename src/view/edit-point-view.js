@@ -8,31 +8,31 @@ function createEditPointTemplate(event) {
     dateFrom,
     dateTo,
     basePrice,
-    id // если нужно для уникальных id в элементах
+    id
   } = event;
 
   const { name, description: destinationDescription, pictures } = destination;
 
   const offerMarkup = offers.map(({ id: offerId, title, price, isChecked }) => `
-  <div class="event__offer-selector">
-    <input
-      class="event__offer-checkbox visually-hidden"
-      id="event-offer-${offerId}-${id}"
-      type="checkbox"
-      name="event-offer-${offerId}"
-      ${isChecked ? 'checked' : ''}
-    >
-    <label class="event__offer-label" for="event-offer-${offerId}-${id}">
-      <span class="event__offer-title">${title}</span>
-      &plus;&euro;&nbsp;
-      <span class="event__offer-price">${price}</span>
-    </label>
-  </div>
-`).join('');
+    <div class="event__offer-selector">
+      <input
+        class="event__offer-checkbox visually-hidden"
+        id="event-offer-${offerId}-${id}"
+        type="checkbox"
+        name="event-offer-${offerId}"
+        ${isChecked ? 'checked' : ''}
+      >
+      <label class="event__offer-label" for="event-offer-${offerId}-${id}">
+        <span class="event__offer-title">${title}</span>
+        &plus;&euro;&nbsp;
+        <span class="event__offer-price">${price}</span>
+      </label>
+    </div>
+  `).join('');
 
   const photosMarkup = pictures.map(({ src, description }) => `
-  <img class="event__photo" src="${src}" alt="${description}">
-`).join('');
+    <img class="event__photo" src="${src}" alt="${description}">
+  `).join('');
 
   return (/*html*/`
     <li class="trip-events__item">
@@ -79,7 +79,6 @@ function createEditPointTemplate(event) {
               required
             >
             <datalist id="destination-list-${id}">
-              <!-- сюда можно динамически подставлять все доступные destinations -->
               <option value="Amsterdam"></option>
               <option value="Geneva"></option>
               <option value="Chamonix"></option>
@@ -152,10 +151,11 @@ function createEditPointTemplate(event) {
 }
 
 export default class EditPointView extends AbstractView {
-  /** @type {object} */
-  #event;
+  #event = null;
+  #handleFormSubmit = null;
+  #handleRollupClick = null;
 
-  constructor(event) {
+  constructor({ event }) {
     super();
     this.#event = event;
   }
@@ -163,4 +163,24 @@ export default class EditPointView extends AbstractView {
   get template() {
     return createEditPointTemplate(this.#event);
   }
+
+  setFormSubmitHandler(callback) {
+    this.#handleFormSubmit = callback;
+    this.element.querySelector('form').addEventListener('submit', this.#formSubmitHandler);
+  }
+
+  setRollupClickHandler(callback) {
+    this.#handleRollupClick = callback;
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#rollupClickHandler);
+  }
+
+  #formSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFormSubmit(evt);
+  };
+
+  #rollupClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleRollupClick(evt);
+  };
 }

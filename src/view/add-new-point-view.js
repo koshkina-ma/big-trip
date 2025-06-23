@@ -101,13 +101,22 @@ function createAddNewPointTemplate(event) {
 export default class AddNewPointView extends AbstractView {
   /** @type {object} */
   #event;
+  #handleFormSubmit;
 
-  constructor(event) {
+  constructor({ event, onFormSubmit }) {
     super();
     this.#event = event;
+    this.#handleFormSubmit = onFormSubmit;
+
+    this.element.querySelector('form').addEventListener('submit', this.#onSubmit);
   }
 
   get template() {
     return createAddNewPointTemplate(this.#event);
   }
+
+  #onSubmit = (evt) => {
+    evt.preventDefault();
+    this.#handleFormSubmit();
+  };
 }
