@@ -35,10 +35,6 @@ function formatRouteTime(startDate, endDate) {
   return { timeRange, duration: durationStr };
 }
 
-function getRandomArrayElement(items) {
-  return items[Math.floor(Math.random() * items.length)];
-}
-
 function formatTripTitle(points) {
   const cities = points.map((point) => point.destination.name);
 
@@ -76,7 +72,6 @@ function calculateTotalCost(points) {
 export {
   getFormattedDate,
   formatRouteTime,
-  getRandomArrayElement,
   formatTripTitle,
   formatTripDates,
   calculateTotalCost,

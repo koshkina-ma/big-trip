@@ -1,5 +1,5 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import { formatRouteTime, getFormattedDate } from '../utils.js';
+import { formatRouteTime, getFormattedDate } from '../utils/utils.js';
 
 function createTripEventItemTemplate(event) {
   const { basePrice, dateFrom, dateTo, destination, isFavorite, offers, type } = event;

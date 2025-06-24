@@ -5,12 +5,14 @@ import AddNewPointView from '../view/add-new-point-view.js';
 import EditPointView from '../view/edit-point-view.js';
 import TripMainView from '../view/trip-main-view.js';
 import TripCostView from '../view/trip-cost-view.js';
+import NoPointsView from '../view/no-points-view.js';
 
-import { formatTripTitle, formatTripDates, calculateTotalCost } from '../utils.js';
+import { formatTripTitle, formatTripDates, calculateTotalCost } from '../utils/utils.js';
 import { render, replace } from '../framework/render.js';
 
 export default class TripPresenter {
   eventListComponent = new TripEventListView();
+  noPointsComponent = new NoPointsView();
   #openedEditForm = null;
   #openedEventComponent = null;
 
@@ -28,6 +30,13 @@ export default class TripPresenter {
     const eventItems = this.eventsModel.getEvents();
     const sortedEvents = [...eventItems].sort((a, b) => new Date(a.dateFrom) - new Date(b.dateFrom));
 
+    this.tripInfoContainer.innerHTML = '';
+
+    if (eventItems.length === 0) {
+      render(this.noPointsComponent, this.eventsContainer);
+      return;
+    }
+
     const tripMainComponent = new TripMainView({
       title: formatTripTitle(sortedEvents),
       dateRange: formatTripDates(sortedEvents)
@@ -37,10 +46,8 @@ export default class TripPresenter {
       calculateTotalCost(sortedEvents)
     );
 
-    this.tripInfoContainer.innerHTML = '';
     render(tripMainComponent, this.tripInfoContainer);
     render(tripCostComponent, this.tripInfoContainer);
-
     render(new ListSortView(), this.eventsContainer);
     render(this.eventListComponent, this.eventsContainer);
 
