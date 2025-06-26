@@ -1,36 +1,47 @@
 import AbstractView from '../framework/view/abstract-view.js';
 
-function createListFilterTemplate() {
-  return (/*html*/
+function createListFilterTemplate(filters, currentFilterType) {
+  return (
     `<form class="trip-filters" action="#" method="get">
-                <div class="trip-filters__filter">
-                  <input id="filter-everything" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="everything">
-                  <label class="trip-filters__filter-label" for="filter-everything">Everything</label>
-                </div>
-
-                <div class="trip-filters__filter">
-                  <input id="filter-future" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="future">
-                  <label class="trip-filters__filter-label" for="filter-future">Future</label>
-                </div>
-
-                <div class="trip-filters__filter">
-                  <input id="filter-present" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="present">
-                  <label class="trip-filters__filter-label" for="filter-present">Present</label>
-                </div>
-
-                <div class="trip-filters__filter">
-                  <input id="filter-past" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="past" checked>
-                  <label class="trip-filters__filter-label" for="filter-past">Past</label>
-                </div>
-
-                <button class="visually-hidden" type="submit">Accept filter</button>
-              </form>`
-
+      ${filters.map(({type, name}) => `
+        <div class="trip-filters__filter">
+          <input
+            id="filter-${type}"
+            class="trip-filters__filter-input visually-hidden"
+            type="radio"
+            name="trip-filter"
+            value="${type}"
+            ${type === currentFilterType ? 'checked' : ''}
+          >
+          <label class="trip-filters__filter-label" for="filter-${type}">${name}</label>
+        </div>
+      `).join('')}
+      <button class="visually-hidden" type="submit">Accept filter</button>
+    </form>`
   );
 }
 
+
 export default class ListFilterView extends AbstractView {
-  get template() {
-    return createListFilterTemplate();
+  #filters = null;
+  #currentFilter = null;
+  #onFilterChange = null;
+
+  constructor({filters, currentFilterType, onFilterChange}) {
+    super();
+    this.#filters = filters;
+    this.#currentFilter = currentFilterType;
+    this.#onFilterChange = onFilterChange;
+
+    this.element.addEventListener('change', this.#filterChangeHandler);
   }
+
+  get template() {
+    return createListFilterTemplate(this.#filters);
+  }
+
+  #filterChangeHandler = (evt) => {
+    evt.preventDefault();
+    this.#onFilterChange(evt.target.value);
+  };
 }
