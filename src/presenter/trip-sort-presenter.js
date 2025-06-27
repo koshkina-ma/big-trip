@@ -20,7 +20,7 @@ export default class TripSortPresenter {
     this.#sortComponent.setSortTypeChangeHandler(this.#handleSortTypeChange);
 
     if (prevSortComponent === null) {
-      render(this.#sortComponent, this.#container);
+      render(this.#sortComponent, this.#container); // сюда обязательно чистый DOM-элемент
       return;
     }
 

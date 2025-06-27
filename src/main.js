@@ -7,6 +7,7 @@ const filtersElement = document.querySelector('.trip-controls__filters');
 const siteMainElement = document.querySelector('.trip-events');
 
 const eventsModel = new EventsModel();
+
 const tripPresenter = new TripPresenter({
   eventsContainer: siteMainElement,
   eventsModel: eventsModel,
@@ -14,17 +15,20 @@ const tripPresenter = new TripPresenter({
 
 let currentFilter = 'everything';
 
-const handleFilterChange = (filterType) => {
-  currentFilter = filterType;
-  tripPresenter.destroy();
-  tripPresenter.init({ filterType: currentFilter });
-};
-
 const filterPresenter = new FilterPresenter(
   filtersElement,
   filters,
   currentFilter,
-  handleFilterChange
+  (filterType) => {
+    if (currentFilter === filterType) {
+      return;
+    }
+
+    currentFilter = filterType;
+
+    filterPresenter.init();
+    tripPresenter.init({ filterType: currentFilter });
+  }
 );
 
 filterPresenter.init();
