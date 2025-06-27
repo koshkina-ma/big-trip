@@ -9,10 +9,14 @@ export default class TripPresenter {
   #eventsContainer = null;
   #sortContainer = null;
   #listContainer = null;
+
   #tripInfoContainer = null;
+
   #eventsModel = null;
+
   #filterType = FilterType.EVERYTHING;
   #currentSortType = SortType.DAY;
+
   #tripInfoPresenter = null;
   #tripSortPresenter = null;
   #tripEventsPresenter = null;
@@ -31,8 +35,13 @@ export default class TripPresenter {
   }
 
   init({ filterType = FilterType.EVERYTHING } = {}) {
-    this.#filterType = filterType;
-    this.#currentSortType = SortType.DAY;
+    if (this.#filterType !== filterType) {
+      this.#filterType = filterType;
+      this.#currentSortType = SortType.DAY; // сброс сортировки при смене фильтра
+      if (this.#tripSortPresenter) {
+        this.#tripSortPresenter.setSortType(this.#currentSortType);
+      }
+    }
 
     const allEvents = this.#eventsModel.getEvents();
     const filteredEvents = filter[this.#filterType](allEvents);

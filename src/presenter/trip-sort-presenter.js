@@ -20,11 +20,19 @@ export default class TripSortPresenter {
     this.#sortComponent.setSortTypeChangeHandler(this.#handleSortTypeChange);
 
     if (prevSortComponent === null) {
-      render(this.#sortComponent, this.#container); // сюда обязательно чистый DOM-элемент
+      render(this.#sortComponent, this.#container);
       return;
     }
 
     replace(this.#sortComponent, prevSortComponent);
+  }
+
+  setSortType(sortType) {
+    if (this.#currentSortType === sortType) {
+      return;
+    }
+    this.#currentSortType = sortType;
+    this.init();
   }
 
   #handleSortTypeChange = (sortType) => {

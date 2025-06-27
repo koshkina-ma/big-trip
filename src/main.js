@@ -2,18 +2,20 @@ import TripPresenter from './presenter/trip-presenter.js';
 import EventsModel from './model/events-model.js';
 import FilterPresenter from './presenter/filter-presenter.js';
 import { filters } from './mock/filter.js';
+import { SortType } from './const.js';
 
 const filtersElement = document.querySelector('.trip-controls__filters');
 const siteMainElement = document.querySelector('.trip-events');
 
 const eventsModel = new EventsModel();
 
+let currentFilter = 'everything';
+let currentSortType = SortType.DAY;
+
 const tripPresenter = new TripPresenter({
   eventsContainer: siteMainElement,
   eventsModel: eventsModel,
 });
-
-let currentFilter = 'everything';
 
 const filterPresenter = new FilterPresenter(
   filtersElement,
@@ -25,11 +27,12 @@ const filterPresenter = new FilterPresenter(
     }
 
     currentFilter = filterType;
+    currentSortType = SortType.DAY; // Сбрасываем сортировку
 
-    filterPresenter.init();
-    tripPresenter.init({ filterType: currentFilter });
+    tripPresenter.init({ filterType: currentFilter, sortType: currentSortType });
+    filterPresenter.init(); // обновляем фильтры (если нужно)
   }
 );
 
 filterPresenter.init();
-tripPresenter.init({ filterType: currentFilter });
+tripPresenter.init({ filterType: currentFilter, sortType: currentSortType });
