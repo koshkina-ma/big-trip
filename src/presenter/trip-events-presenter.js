@@ -8,6 +8,7 @@ export default class TripEventsPresenter {
   #eventsContainer = null;
   #eventListComponent = new TripEventListView();
   #noPointsComponent = null;
+  #eventPresenters = new Map();
   #openedEditForm = null;
   #openedEventComponent = null;
 
@@ -33,34 +34,38 @@ export default class TripEventsPresenter {
     this.#eventsContainer.innerHTML = '';
     this.#eventListComponent = new TripEventListView();
     this.#noPointsComponent = null;
+    this.#eventPresenters.clear();
     this.#openedEditForm = null;
     this.#openedEventComponent = null;
   }
 
   #renderEvents(events) {
-    events.forEach((event) => {
-      const eventComponent = new TripEventItemView({ event });
-      const editFormComponent = new EditPointView({ event });
+    events.forEach((event) => this.#renderEvent(event));
+  }
 
-      eventComponent.setRollupClickHandler(() => {
-        if (this.#openedEditForm) {
-          this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
-        }
-        this.#openedEditForm = editFormComponent;
-        this.#openedEventComponent = eventComponent;
-        this.#replaceEventToForm(eventComponent, editFormComponent);
-      });
+  #renderEvent(event) {
+    const eventComponent = new TripEventItemView({ event });
+    const editFormComponent = new EditPointView({ event });
 
-      editFormComponent.setFormSubmitHandler(() => {
-        this.#replaceFormToEvent(editFormComponent, eventComponent);
-      });
-
-      editFormComponent.setRollupClickHandler(() => {
-        this.#replaceFormToEvent(editFormComponent, eventComponent);
-      });
-
-      render(eventComponent, this.#eventListComponent.element);
+    eventComponent.setRollupClickHandler(() => {
+      if (this.#openedEditForm) {
+        this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
+      }
+      this.#openedEditForm = editFormComponent;
+      this.#openedEventComponent = eventComponent;
+      this.#replaceEventToForm(eventComponent, editFormComponent);
     });
+
+    editFormComponent.setFormSubmitHandler(() => {
+      this.#replaceFormToEvent(editFormComponent, eventComponent);
+    });
+
+    editFormComponent.setRollupClickHandler(() => {
+      this.#replaceFormToEvent(editFormComponent, eventComponent);
+    });
+
+    render(eventComponent, this.#eventListComponent.element);
+    this.#eventPresenters.set(event.id, { eventComponent, editFormComponent });
   }
 
   #replaceEventToForm(eventComponent, editFormComponent) {
