@@ -51,24 +51,38 @@ function createTripEventItemTemplate(event) {
 export default class TripEventItemView extends AbstractView {
   #event = null;
   #handleRollupClick = null;
+  #handleFavoriteClick = null;
 
-  constructor({ event }) {
+  constructor({ event, onRollupClick, onFavoriteClick }) {
     super();
     this.#event = event;
+    this.#handleRollupClick = onRollupClick;
+    this.#handleFavoriteClick = onFavoriteClick;
+    this.#setHandlers();
   }
 
   get template() {
     return createTripEventItemTemplate(this.#event);
   }
 
-  setRollupClickHandler(callback) {
-    this.#handleRollupClick = callback;
+  #setHandlers() {
     this.element.querySelector('.event__rollup-btn')
       .addEventListener('click', this.#rollupClickHandler);
+    this.element.querySelector('.event__favorite-btn')
+      .addEventListener('click', this.#favoriteClickHandler);
   }
 
   #rollupClickHandler = (evt) => {
     evt.preventDefault();
-    this.#handleRollupClick();
+    if (this.#handleRollupClick) {
+      this.#handleRollupClick();
+    }
+  };
+
+  #favoriteClickHandler = (evt) => {
+    evt.preventDefault();
+    if (this.#handleFavoriteClick) {
+      this.#handleFavoriteClick(this.#event);
+    }
   };
 }

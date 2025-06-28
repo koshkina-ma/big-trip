@@ -11,12 +11,14 @@ export default class TripEventsPresenter {
   #eventPresenters = new Map();
   #openedEditForm = null;
   #openedEventComponent = null;
+  #events = [];
 
   constructor(eventsContainer) {
     this.#eventsContainer = eventsContainer;
   }
 
   init(events, filterType) {
+    this.#events = events;
     this.#clear();
 
     if (events.length === 0) {
@@ -26,8 +28,7 @@ export default class TripEventsPresenter {
     }
 
     render(this.#eventListComponent, this.#eventsContainer);
-
-    this.#renderEvents(events);
+    this.#renderEvents(this.#events);
   }
 
   #clear() {
@@ -44,17 +45,22 @@ export default class TripEventsPresenter {
   }
 
   #renderEvent(event) {
-    const eventComponent = new TripEventItemView({ event });
-    const editFormComponent = new EditPointView({ event });
-
-    eventComponent.setRollupClickHandler(() => {
-      if (this.#openedEditForm) {
-        this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
+    const eventComponent = new TripEventItemView({
+      event,
+      onRollupClick: () => {
+        if (this.#openedEditForm) {
+          this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
+        }
+        this.#openedEditForm = this.#eventPresenters.get(event.id).editFormComponent;
+        this.#openedEventComponent = eventComponent;
+        this.#replaceEventToForm(eventComponent, this.#openedEditForm);
+      },
+      onFavoriteClick: (evtEvent) => {
+        this.#handleFavoriteToggle(evtEvent);
       }
-      this.#openedEditForm = editFormComponent;
-      this.#openedEventComponent = eventComponent;
-      this.#replaceEventToForm(eventComponent, editFormComponent);
     });
+
+    const editFormComponent = new EditPointView({ event });
 
     editFormComponent.setFormSubmitHandler(() => {
       this.#replaceFormToEvent(editFormComponent, eventComponent);
@@ -66,6 +72,39 @@ export default class TripEventsPresenter {
 
     render(eventComponent, this.#eventListComponent.element);
     this.#eventPresenters.set(event.id, { eventComponent, editFormComponent });
+  }
+
+  #handleFavoriteToggle(event) {
+    const updatedEvent = { ...event, isFavorite: !event.isFavorite };
+    const index = this.#events.findIndex((e) => e.id === updatedEvent.id);
+    if (index === -1) {
+      return;
+    }
+
+    this.#events[index] = updatedEvent;
+
+    const prevPresenter = this.#eventPresenters.get(updatedEvent.id);
+    const newEventComponent = new TripEventItemView({
+      event: updatedEvent,
+      onRollupClick: () => {
+        if (this.#openedEditForm) {
+          this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
+        }
+        this.#openedEditForm = this.#eventPresenters.get(updatedEvent.id).editFormComponent;
+        this.#openedEventComponent = newEventComponent;
+        this.#replaceEventToForm(newEventComponent, this.#openedEditForm);
+      },
+      onFavoriteClick: (evtEvent) => {
+        this.#handleFavoriteToggle(evtEvent);
+      }
+    });
+
+    replace(newEventComponent, prevPresenter.eventComponent);
+
+    this.#eventPresenters.set(updatedEvent.id, {
+      eventComponent: newEventComponent,
+      editFormComponent: prevPresenter.editFormComponent,
+    });
   }
 
   #replaceEventToForm(eventComponent, editFormComponent) {
