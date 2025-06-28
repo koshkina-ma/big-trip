@@ -37,7 +37,7 @@ export default class TripPresenter {
   init({ filterType = FilterType.EVERYTHING } = {}) {
     if (this.#filterType !== filterType) {
       this.#filterType = filterType;
-      this.#currentSortType = SortType.DAY; // сброс сортировки при смене фильтра
+      this.#currentSortType = SortType.DAY;
       if (this.#tripSortPresenter) {
         this.#tripSortPresenter.setSortType(this.#currentSortType);
       }

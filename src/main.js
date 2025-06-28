@@ -27,10 +27,10 @@ const filterPresenter = new FilterPresenter(
     }
 
     currentFilter = filterType;
-    currentSortType = SortType.DAY; // Сбрасываем сортировку
+    currentSortType = SortType.DAY;
 
     tripPresenter.init({ filterType: currentFilter, sortType: currentSortType });
-    filterPresenter.init(); // обновляем фильтры (если нужно)
+    filterPresenter.init();
   }
 );
 
