@@ -1,4 +1,4 @@
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 
 function createEditPointTemplate(event) {
   const {
@@ -150,7 +150,7 @@ function createEditPointTemplate(event) {
   `);
 }
 
-export default class EditPointView extends AbstractView {
+export default class EditPointView extends AbstractStatefulView {
   #event = null;
   #handleFormSubmit = null;
   #handleRollupClick = null;
