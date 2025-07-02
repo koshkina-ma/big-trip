@@ -1,4 +1,5 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+import { destinations } from '../mock/destinations.js';
 
 function createEditPointTemplate(state) {
   const {
@@ -177,9 +178,12 @@ export default class EditPointView extends AbstractStatefulView {
   _restoreHandlers() {
     this.setFormSubmitHandler(this.#handleFormSubmit);
     this.setRollupClickHandler(this.#handleRollupClick);
-    this.element.querySelectorAll('.event__type-input').forEach((input) => {
-      input.addEventListener('change', this.#eventTypeChangeHandler);
-    });
+
+    this.element.querySelectorAll('.event__type-input')
+      .forEach((input) => input.addEventListener('change', this.#eventTypeChangeHandler));
+
+    this.element.querySelector('.event__input--destination')
+      .addEventListener('change', this.#destinationChangeHandler);
   }
 
   #formSubmitHandler = (evt) => {
@@ -195,5 +199,15 @@ export default class EditPointView extends AbstractStatefulView {
   #eventTypeChangeHandler = (evt) => {
     const newType = evt.target.value;
     this.updateElement({ type: newType });
+  };
+
+  #destinationChangeHandler = (evt) => {
+    const newDestinationName = evt.target.value;
+    const newDestination = destinations.find((dest) => dest.name === newDestinationName);
+    if (!newDestination) {
+      console.warn(`Destination with name "${newDestinationName}" not found`);
+      return;
+    }
+    this.updateElement({ destination: newDestination });
   };
 }
