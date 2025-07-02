@@ -1,6 +1,6 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 
-function createEditPointTemplate(event) {
+function createEditPointTemplate(state) {
   const {
     type,
     destination,
@@ -9,7 +9,7 @@ function createEditPointTemplate(event) {
     dateTo,
     basePrice,
     id
-  } = event;
+  } = state;
 
   const { name, description: destinationDescription, pictures } = destination;
 
@@ -151,17 +151,17 @@ function createEditPointTemplate(event) {
 }
 
 export default class EditPointView extends AbstractStatefulView {
-  #event = null;
   #handleFormSubmit = null;
   #handleRollupClick = null;
 
   constructor({ event }) {
     super();
-    this.#event = event;
+    this._state = structuredClone(event);
+    this._restoreHandlers();
   }
 
   get template() {
-    return createEditPointTemplate(this.#event);
+    return createEditPointTemplate(this._state);
   }
 
   setFormSubmitHandler(callback) {
@@ -174,6 +174,14 @@ export default class EditPointView extends AbstractStatefulView {
     this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#rollupClickHandler);
   }
 
+  _restoreHandlers() {
+    this.setFormSubmitHandler(this.#handleFormSubmit);
+    this.setRollupClickHandler(this.#handleRollupClick);
+    this.element.querySelectorAll('.event__type-input').forEach((input) => {
+      input.addEventListener('change', this.#eventTypeChangeHandler);
+    });
+  }
+
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
     this.#handleFormSubmit(evt);
@@ -182,5 +190,10 @@ export default class EditPointView extends AbstractStatefulView {
   #rollupClickHandler = (evt) => {
     evt.preventDefault();
     this.#handleRollupClick(evt);
+  };
+
+  #eventTypeChangeHandler = (evt) => {
+    const newType = evt.target.value;
+    this.updateElement({ type: newType });
   };
 }
