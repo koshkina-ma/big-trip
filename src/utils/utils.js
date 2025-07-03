@@ -5,10 +5,15 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 dayjs.extend(duration);
 dayjs.extend(isSameOrBefore);
 
-const DATE_FORMAT = 'MMM DD';
+const ROUTE_DATE_FORMAT = 'MMM DD';
+const EDIT_POINT_DATE_FORMAT = 'DD/MM/YY HH:mm';
 
 function getFormattedDate(date) {
-  return dayjs(date).format(DATE_FORMAT).toUpperCase();
+  return dayjs(date).format(ROUTE_DATE_FORMAT).toUpperCase();
+}
+
+function getEditPointFormattedDate(date) {
+  return dayjs(date).format(EDIT_POINT_DATE_FORMAT);
 }
 
 function formatRouteTime(startDate, endDate) {
@@ -71,6 +76,7 @@ function calculateTotalCost(points) {
 
 export {
   getFormattedDate,
+  getEditPointFormattedDate,
   formatRouteTime,
   formatTripTitle,
   formatTripDates,

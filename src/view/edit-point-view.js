@@ -1,5 +1,9 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { destinations } from '../mock/destinations.js';
+import { getEditPointFormattedDate } from '../utils/utils.js';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+
 
 function createEditPointTemplate(state) {
   const {
@@ -93,7 +97,7 @@ function createEditPointTemplate(state) {
               id="event-start-time-${id}"
               type="text"
               name="event-start-time"
-              value="${dateFrom}"
+              value="${getEditPointFormattedDate(dateFrom)}"
             >
             &mdash;
             <label class="visually-hidden" for="event-end-time-${id}">To</label>
@@ -102,7 +106,7 @@ function createEditPointTemplate(state) {
               id="event-end-time-${id}"
               type="text"
               name="event-end-time"
-              value="${dateTo}"
+              value="${getEditPointFormattedDate(dateTo)}"
             >
           </div>
 
@@ -155,9 +159,13 @@ export default class EditPointView extends AbstractStatefulView {
   #handleFormSubmit = null;
   #handleRollupClick = null;
 
+  #flatpickrStart = null;
+  #flatpickrEnd = null;
+
   constructor({ event }) {
     super();
     this._state = structuredClone(event);
+    this.#setFlatpickr();
     this._restoreHandlers();
   }
 
@@ -184,11 +192,82 @@ export default class EditPointView extends AbstractStatefulView {
 
     this.element.querySelector('.event__input--destination')
       .addEventListener('change', this.#destinationChangeHandler);
+
+    this.#setFlatpickr();
   }
+
+  #setFlatpickr() {
+    if (this.#flatpickrStart) {
+      this.#flatpickrStart.destroy();
+      this.#flatpickrStart = null;
+    }
+    if (this.#flatpickrEnd) {
+      this.#flatpickrEnd.destroy();
+      this.#flatpickrEnd = null;
+    }
+
+    const startInput = this.element.querySelector(`#event-start-time-${ this._state.id}`);
+    const endInput = this.element.querySelector(`#event-end-time-${ this._state.id}`);
+
+    this.#flatpickrStart = flatpickr(startInput, {
+      enableTime: true,
+      dateFormat: 'd/m/y H:i',
+      defaultDate: this._state.dateFrom,
+      onChange: this.#startDateChangeHandler,
+    });
+
+    this.#flatpickrEnd = flatpickr(endInput, {
+      enableTime: true,
+      dateFormat: 'd/m/y H:i',
+      defaultDate: this._state.dateTo,
+      minDate: this._state.dateFrom,
+      onChange: this.#endDateChangeHandler,
+    });
+  }
+
+  #startDateChangeHandler = ([selectedDate]) => {
+    if (selectedDate > this._state.dateTo) {
+      this.updateElement({
+        dateFrom: selectedDate,
+        dateTo: selectedDate,
+      });
+    } else {
+      this.updateElement({
+        dateFrom: selectedDate,
+      });
+    }
+  };
+
+  #endDateChangeHandler = ([selectedDate]) => {
+    if (selectedDate < this._state.dateFrom) {
+      this.updateElement({
+        dateFrom: selectedDate,
+        dateTo: selectedDate,
+      });
+    } else {
+      this.updateElement({
+        dateTo: selectedDate,
+      });
+    }
+  };
+
 
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-    this.#handleFormSubmit(evt);
+
+    const updatedPoint = {
+      ...this._state,
+      basePrice: Number(this.element.querySelector(`#event-price-${this._state.id}`).value),
+      destination: destinations.find(
+        (dest) => dest.name === this.element.querySelector(`#event-destination-${this._state.id}`).value
+      ) || this._state.destination,
+      offers: this._state.offers.map((offer) => ({
+        ...offer,
+        isChecked: this.element.querySelector(`#event-offer-${offer.id}-${this._state.id}`).checked
+      }))
+    };
+
+    this.#handleFormSubmit(updatedPoint);
   };
 
   #rollupClickHandler = (evt) => {
@@ -205,7 +284,6 @@ export default class EditPointView extends AbstractStatefulView {
     const newDestinationName = evt.target.value;
     const newDestination = destinations.find((dest) => dest.name === newDestinationName);
     if (!newDestination) {
-      console.warn(`Destination with name "${newDestinationName}" not found`);
       return;
     }
     this.updateElement({ destination: newDestination });
