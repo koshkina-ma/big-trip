@@ -74,7 +74,7 @@ export default class TripEventsPresenter {
     this.#eventPresenters.set(event.id, { eventComponent, editFormComponent });
   }
 
-  #handleFormSubmit(updatedEvent, editFormComponent, eventComponent) {
+  #handleFormSubmit(updatedEvent, editFormComponent, eventComponent) { //тут изменения или в основном презентере
     const index = this.#events.findIndex((e) => e.id === updatedEvent.id);
     if (index === -1) {
       return;
@@ -112,7 +112,7 @@ export default class TripEventsPresenter {
   }
 
 
-  #handleFavoriteToggle(event) {
+  #handleFavoriteToggle(event) { //тут изменения или в основном презентере
     const updatedEvent = { ...event, isFavorite: !event.isFavorite };
     const index = this.#events.findIndex((e) => e.id === updatedEvent.id);
     if (index === -1) {
@@ -165,3 +165,4 @@ export default class TripEventsPresenter {
     }
   };
 }
+

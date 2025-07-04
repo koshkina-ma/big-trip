@@ -1,6 +1,7 @@
 import TripInfoPresenter from './trip-info-presenter.js';
 import TripSortPresenter from './trip-sort-presenter.js';
 import TripEventsPresenter from './trip-events-presenter.js';
+//import Observable from '../framework/observable.js';
 
 import { filter } from '../utils/filter.js';
 import { SortType, FilterType } from '../const.js';
@@ -14,6 +15,11 @@ export default class TripPresenter {
 
   #eventsModel = null;
 
+  //какой-то одноименный геттер, проверить место в модели у меня getEvents
+  get Events() {
+    return this.#eventsModel.events;
+  }
+
   #filterType = FilterType.EVERYTHING;
   #currentSortType = SortType.DAY;
 
@@ -24,6 +30,8 @@ export default class TripPresenter {
   constructor({ eventsContainer, eventsModel }) {
     this.#eventsContainer = eventsContainer;
     this.#eventsModel = eventsModel;
+
+    //this.#eventsModel.addObserver(this.handleModelEvent);
 
     this.#sortContainer = this.#eventsContainer.querySelector('.trip-events__sort-container');
     this.#listContainer = this.#eventsContainer.querySelector('.trip-events__list');
@@ -96,3 +104,27 @@ export default class TripPresenter {
     this.#eventsContainer.innerHTML = '';
   }
 }
+
+// //в этом файле надо добавить
+//  #handleViewAction = (actionType, updateType, update) => { про типи патч минор мажор тип обновления из конст.
+//     console.log(actionType, updateType, update);
+//     // Здесь будем вызывать обновление модели. тут какие-то Case и break 30:23 комит 7.4
+//     // actionType - действие пользователя, нужно чтобы понять, какой метод модели вызвать
+//     // updateType - тип изменений, нужно чтобы понять, что после нужно обновить
+//     // update - обновленные данные
+//   };
+
+//   #handleModelEvent = (updateType, data) => { как и что будет перерисовываться пишем в этот метод, тут switch
+//     console.log(updateType, data);
+//     // В зависимости от типа изменений решаем, что делать:
+//     // - обновить часть списка (например, когда поменялось описание)
+//     // - обновить список (например, когда задача ушла в архив)
+//     // - обновить всю доску (например, при переключении фильтра)
+//   };
+
+//   //      onDataChange: this.#handleViewAction,
+//    //   onModeChange: this.#handleModeChange
+//      });
+//     taskPresenter.init(task);
+
+
