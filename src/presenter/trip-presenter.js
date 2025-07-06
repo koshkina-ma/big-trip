@@ -1,7 +1,6 @@
 import TripInfoPresenter from './trip-info-presenter.js';
 import TripSortPresenter from './trip-sort-presenter.js';
 import TripEventsPresenter from './trip-events-presenter.js';
-//import Observable from '../framework/observable.js';
 
 import { filter } from '../utils/filter.js';
 import { SortType, FilterType } from '../const.js';
@@ -31,7 +30,7 @@ export default class TripPresenter {
     this.#eventsContainer = eventsContainer;
     this.#eventsModel = eventsModel;
 
-    //this.#eventsModel.addObserver(this.handleModelEvent);
+    this.#eventsModel.addObserver(this.#handleModelEvent);
 
     this.#sortContainer = this.#eventsContainer.querySelector('.trip-events__sort-container');
     this.#listContainer = this.#eventsContainer.querySelector('.trip-events__list');
@@ -39,16 +38,22 @@ export default class TripPresenter {
     this.#tripInfoContainer = document.querySelector('.trip-main__trip-info');
 
     this.#tripInfoPresenter = new TripInfoPresenter(this.#tripInfoContainer);
-    this.#tripEventsPresenter = new TripEventsPresenter(this.#listContainer);
+    this.#tripEventsPresenter = new TripEventsPresenter(this.#listContainer, {
+      onDataChange: this.#handleViewAction,
+      onModeChange: this.#handleModeChange,
+    });
   }
 
-  init({ filterType = FilterType.EVERYTHING } = {}) {
+  init({ filterType = FilterType.EVERYTHING, sortType = SortType.DAY } = {}) {
     if (this.#filterType !== filterType) {
       this.#filterType = filterType;
       this.#currentSortType = SortType.DAY;
       if (this.#tripSortPresenter) {
         this.#tripSortPresenter.setSortType(this.#currentSortType);
       }
+    }
+    if (this.#currentSortType !== sortType) {
+      this.#currentSortType = sortType;
     }
 
     const allEvents = this.#eventsModel.getEvents();
@@ -96,6 +101,41 @@ export default class TripPresenter {
     const sortedEvents = this.#getSortedEvents(filteredEvents);
 
     this.#tripEventsPresenter.init(sortedEvents, this.#filterType);
+  };
+
+  #handleViewAction = (actionType, updateType, update) => {
+    switch (actionType) {
+      case 'UPDATE_EVENT':
+        this.#eventsModel.updateEvent(update);
+        break;
+      case 'ADD_EVENT':
+        // Если добавление реализовано
+        if (this.#eventsModel.addEvent) {
+          this.#eventsModel.addEvent(update);
+        }
+        break;
+      case 'DELETE_EVENT':
+        // Если удаление реализовано
+        if (this.#eventsModel.deleteEvent) {
+          this.#eventsModel.deleteEvent(update.id);
+        }
+        break;
+    }
+  };
+
+  #handleModelEvent = (updateType, data) => {
+    switch (updateType) {
+      case 'eventUpdated':
+        this.#tripEventsPresenter.updateEvent(data);
+        break;
+      case 'eventsUpdated':
+        this.init({ filterType: this.#filterType, sortType: this.#currentSortType });
+        break;
+    }
+  };
+
+  #handleModeChange = () => {
+    //без изменений или пустой метод
   };
 
   destroy() {
