@@ -1,3 +1,4 @@
+//import he from 'he'; - пользователь что-то вводит у меня?
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { destinations } from '../mock/destinations.js';
 import { getEditPointFormattedDate } from '../utils/utils.js';
