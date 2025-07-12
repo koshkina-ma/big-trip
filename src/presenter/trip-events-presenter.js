@@ -12,14 +12,20 @@ export default class TripEventsPresenter {
   #openedEditForm = null;
   #openedEventComponent = null;
   #events = [];
+  //#destinations;
+  // #offers;
+  #eventsModel;
 
   #onDataChange = null;
   #onModeChange = null;
 
-  constructor(eventsContainer, { onDataChange, onModeChange }) {
+  constructor(eventsContainer, { onDataChange, onModeChange }, eventsModel) {
     this.#eventsContainer = eventsContainer;
     this.#onDataChange = onDataChange;
     this.#onModeChange = onModeChange;
+    //this.#destinations = destinations;
+    //this.#offers = offers;
+    this.#eventsModel = eventsModel;
   }
 
   init(events, filterType) {
@@ -37,6 +43,12 @@ export default class TripEventsPresenter {
   }
 
   updateEvent(updatedEvent) {
+    const oldEvent = this.#events.find((e) => e.id === updatedEvent.id);
+    if (oldEvent && oldEvent.type !== updatedEvent.type) {
+      updatedEvent.offers = [];
+    }
+
+
     const index = this.#events.findIndex((event) => event.id === updatedEvent.id);
     if (index === -1) {
       return;
@@ -122,6 +134,14 @@ export default class TripEventsPresenter {
     });
 
     const editFormComponent = new EditPointView({ event });
+
+    editFormComponent.setTypeChangeHandler((type) => {
+      // Берём ID выбранных офферов ИЗ ТЕКУЩЕЙ ТОЧКИ
+      const selectedIds = this.#events.find((e) => e.id === event.id).offers;
+
+      const currentOffers = this.#eventsModel.getOffersByType(type, selectedIds);
+      editFormComponent.updateElement({ offers: currentOffers });
+    });
 
     editFormComponent.setFormSubmitHandler((updatedEvent) => {
       this.#onDataChange(

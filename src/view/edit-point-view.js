@@ -166,6 +166,11 @@ export default class EditPointView extends AbstractStatefulView {
   constructor({ event }) {
     super();
     this._state = structuredClone(event);
+    this._callback = { // Добавьте это
+      typeChange: () => {},
+      formSubmit: () => {},
+      rollupClick: () => {}
+    };
     this.#setFlatpickr();
     this._restoreHandlers();
   }
@@ -182,6 +187,10 @@ export default class EditPointView extends AbstractStatefulView {
   setRollupClickHandler(callback) {
     this.#handleRollupClick = callback;
     this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#rollupClickHandler);
+  }
+
+  setTypeChangeHandler(callback) {
+    this._callback.typeChange = callback; // Колбэк сохраняется и вызывается в #eventTypeChangeHandler
   }
 
   _restoreHandlers() {
@@ -279,6 +288,7 @@ export default class EditPointView extends AbstractStatefulView {
   #eventTypeChangeHandler = (evt) => {
     const newType = evt.target.value;
     this.updateElement({ type: newType });
+    this._callback.typeChange?.(newType);
   };
 
   #destinationChangeHandler = (evt) => {

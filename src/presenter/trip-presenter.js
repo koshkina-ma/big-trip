@@ -38,10 +38,14 @@ export default class TripPresenter {
     this.#tripInfoContainer = document.querySelector('.trip-main__trip-info');
 
     this.#tripInfoPresenter = new TripInfoPresenter(this.#tripInfoContainer);
-    this.#tripEventsPresenter = new TripEventsPresenter(this.#listContainer, {
-      onDataChange: this.#handleViewAction,
-      onModeChange: this.#handleModeChange,
-    });
+    this.#tripEventsPresenter = new TripEventsPresenter(
+      this.#listContainer,
+      {
+        onDataChange: this.#handleViewAction,
+        onModeChange: this.#handleModeChange,
+      },
+      eventsModel
+    );
   }
 
   init({ filterType = FilterType.EVERYTHING, sortType = SortType.DAY } = {}) {
