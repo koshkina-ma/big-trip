@@ -108,9 +108,10 @@ export default class TripPresenter {
   };
 
   #handleViewAction = (actionType, updateType, update) => {
+    console.log('PROCESSING ACTION:', actionType);
     switch (actionType) {
-      case 'UPDATE_EVENT':
-        this.#eventsModel.updateEvent(update);
+      case 'UPDATE':
+        this.#eventsModel.update(update);
         break;
       case 'ADD_EVENT':
         // Если добавление реализовано
@@ -128,14 +129,20 @@ export default class TripPresenter {
   };
 
   #handleModelEvent = (updateType, data) => {
-    switch (updateType) {
-      case 'eventUpdated':
-        this.#tripEventsPresenter.updateEvent(data);
-        break;
-      case 'eventsUpdated':
-        this.init({ filterType: this.#filterType, sortType: this.#currentSortType });
-        break;
+    console.log('Main presenter received:', updateType, data.id);
+
+    if (updateType === 'update') {
+      this.#tripEventsPresenter.updateEvent(data); // Пробрасываем в дочерний презентер
     }
+
+    // switch (updateType) {
+    //   case 'eventUpdated':
+    //     this.#tripEventsPresenter.updateEvent(data);
+    //     break;
+    //   case 'eventsUpdated':
+    //     this.init({ filterType: this.#filterType, sortType: this.#currentSortType });
+    //     break;
+    // }
   };
 
   #handleModeChange = () => {

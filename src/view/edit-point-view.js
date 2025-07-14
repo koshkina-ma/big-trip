@@ -165,6 +165,7 @@ export default class EditPointView extends AbstractStatefulView {
 
   constructor({ event }) {
     super();
+    console.log('Edit form initial offers:', event.offers);
     this._state = structuredClone(event);
     this._callback = { // Добавьте это
       typeChange: () => {},
@@ -271,13 +272,18 @@ export default class EditPointView extends AbstractStatefulView {
       destination: destinations.find(
         (dest) => dest.name === this.element.querySelector(`#event-destination-${this._state.id}`).value
       ) || this._state.destination,
-      offers: this._state.offers.map((offer) => ({
-        ...offer,
-        isChecked: this.element.querySelector(`#event-offer-${offer.id}-${this._state.id}`).checked
-      }))
+      offers: this._state.offers
+        .map((offer) => ({
+          ...offer,
+          isChecked: this.element.querySelector(`#event-offer-${offer.id}-${this._state.id}`)?.checked || false
+        }))
+        .filter((offer) => offer.isChecked)
+        .map((offer) => ({ id: offer.id, title: offer.title, price: offer.price }))
     };
 
-    this.#handleFormSubmit(updatedPoint);
+    console.log('Submitting offers:', updatedPoint.offers);
+
+    this.#handleFormSubmit('UPDATE', updatedPoint);
   };
 
   #rollupClickHandler = (evt) => {
