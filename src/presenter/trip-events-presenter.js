@@ -115,7 +115,14 @@ export default class TripEventsPresenter {
     if (presenter) {
       const newEventComponent = new TripEventItemView({
         event: updatedEvent,
-        onRollupClick: () => this.#openedEditForm(updatedEvent.id),
+        onRollupClick: () => {
+          if (this.#openedEditForm) {
+            this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
+          }
+          this.#openedEditForm = this.#eventPresenters.get(updatedEvent.id).editFormComponent;
+          this.#openedEventComponent = newEventComponent;
+          this.#replaceEventToForm(newEventComponent, this.#openedEditForm);
+        },
         onFavoriteClick: this.#handleFavoriteToggle
       });
 
@@ -135,7 +142,7 @@ export default class TripEventsPresenter {
       'PATCH',
       updatedEvent
     );
-  }
+  };
 
   #replaceEventToForm(eventComponent, editFormComponent) {
     if (this.#onModeChange) {
