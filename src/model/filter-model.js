@@ -10,7 +10,7 @@ export default class FilterModel extends Observable {
 
   setFilter(updateType, filter) {
     this.#filter = filter;
-    this._notify(updateType, filter);
+    this._notify(updateType.MINOR, filter);
   }
 }
 //после этого нужно сделать изменения в майн

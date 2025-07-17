@@ -4,14 +4,14 @@ import { render, replace } from '../framework/render.js';
 export default class FilterPresenter {
   #container = null;
   #filters = null;
-  #currentFilter = null;
+  #filterModel = null;
   #onFilterChange = null;
   #filterComponent = null;
 
-  constructor(container, filters, currentFilter, onFilterChange) {
+  constructor(container, filters, filterModel, onFilterChange) {
     this.#container = container;
     this.#filters = filters;
-    this.#currentFilter = currentFilter;
+    this.#filterModel = filterModel;
     this.#onFilterChange = onFilterChange;
   }
 
@@ -20,7 +20,7 @@ export default class FilterPresenter {
 
     this.#filterComponent = new ListFilterView({
       filters: this.#filters,
-      currentFilterType: this.#currentFilter,
+      currentFilterType: this.#filterModel.filter,
       onFilterChange: this.#handleFilterChange,
     });
 
@@ -33,11 +33,11 @@ export default class FilterPresenter {
   }
 
   #handleFilterChange = (filterType) => {
-    if (this.#currentFilter === filterType) {
+    if (this.#filterModel.filter === filterType) {
       return;
     }
 
-    this.#currentFilter = filterType;
+    this.#filterModel.setFilter(filterType);
     this.#onFilterChange(filterType);
   };
 

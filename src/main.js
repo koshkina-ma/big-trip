@@ -1,5 +1,6 @@
 import TripPresenter from './presenter/trip-presenter.js';
 import EventsModel from './model/events-model.js';
+import FilterModel from './model/filter-model.js';
 import FilterPresenter from './presenter/filter-presenter.js';
 import { filters } from './mock/filter.js';
 import { SortType } from './const.js';
@@ -9,28 +10,22 @@ const siteMainElement = document.querySelector('.trip-events');
 
 const eventsModel = new EventsModel();
 
-let currentFilter = 'everything';
-let currentSortType = SortType.DAY;
+const currentFilter = 'everything';
+const currentSortType = SortType.DAY;
 
 const tripPresenter = new TripPresenter({
   eventsContainer: siteMainElement,
   eventsModel: eventsModel,
 });
 
+const filterModel = new FilterModel();
 const filterPresenter = new FilterPresenter(
   filtersElement,
   filters,
-  currentFilter,
+  filterModel,
   (filterType) => {
-    if (currentFilter === filterType) {
-      return;
-    }
-
-    currentFilter = filterType;
-    currentSortType = SortType.DAY;
-
-    tripPresenter.init({ filterType: currentFilter, sortType: currentSortType });
-    filterPresenter.init();
+    filterModel.setFilter(filterType); // Обновляем модель
+    tripPresenter.init({ filterType, sortType: SortType.DAY });
   }
 );
 
