@@ -159,19 +159,13 @@ function createEditPointTemplate(state) {
 export default class EditPointView extends AbstractStatefulView {
   #handleFormSubmit = null;
   #handleRollupClick = null;
-
+  #handleTypeChange = null;
   #flatpickrStart = null;
   #flatpickrEnd = null;
 
   constructor({ event }) {
     super();
-    console.log('Edit form initial offers:', event.offers);
     this._state = structuredClone(event);
-    this._callback = { // Добавьте это
-      typeChange: () => {},
-      formSubmit: () => {},
-      rollupClick: () => {}
-    };
     this.#setFlatpickr();
     this._restoreHandlers();
   }
@@ -182,21 +176,22 @@ export default class EditPointView extends AbstractStatefulView {
 
   setFormSubmitHandler(callback) {
     this.#handleFormSubmit = callback;
-    this.element.querySelector('form').addEventListener('submit', this.#formSubmitHandler);
   }
 
   setRollupClickHandler(callback) {
     this.#handleRollupClick = callback;
-    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#rollupClickHandler);
   }
 
   setTypeChangeHandler(callback) {
-    this._callback.typeChange = callback; // Колбэк сохраняется и вызывается в #eventTypeChangeHandler
+    this.#handleTypeChange = callback;
   }
 
   _restoreHandlers() {
-    this.setFormSubmitHandler(this.#handleFormSubmit);
-    this.setRollupClickHandler(this.#handleRollupClick);
+    this.element.querySelector('form')
+      .addEventListener('submit', this.#formSubmitHandler);
+
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#rollupClickHandler);
 
     this.element.querySelectorAll('.event__type-input')
       .forEach((input) => input.addEventListener('change', this.#eventTypeChangeHandler));
@@ -266,35 +261,34 @@ export default class EditPointView extends AbstractStatefulView {
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
 
+    if (!this.#handleFormSubmit) {
+      return;
+    }
+
+    const formData = new FormData(evt.target);
     const updatedPoint = {
       ...this._state,
-      basePrice: Number(this.element.querySelector(`#event-price-${this._state.id}`).value),
-      destination: destinations.find(
-        (dest) => dest.name === this.element.querySelector(`#event-destination-${this._state.id}`).value
-      ) || this._state.destination,
+      basePrice: Number(formData.get('event-price')),
+      destination: destinations.find((dest) => dest.name === formData.get('event-destination')) || this._state.destination,
       offers: this._state.offers
         .map((offer) => ({
           ...offer,
-          isChecked: this.element.querySelector(`#event-offer-${offer.id}-${this._state.id}`)?.checked || false
+          isChecked: formData.get(`event-offer-${offer.id}`) === 'on'
         }))
-        .filter((offer) => offer.isChecked)
-        .map((offer) => ({ id: offer.id, title: offer.title, price: offer.price }))
     };
-
-    console.log('Submitting offers:', updatedPoint.offers);
-
     this.#handleFormSubmit('UPDATE', updatedPoint);
   };
 
   #rollupClickHandler = (evt) => {
     evt.preventDefault();
-    this.#handleRollupClick(evt);
+    if (this.#handleRollupClick) {
+      this.#handleRollupClick(evt);
+    }
   };
 
   #eventTypeChangeHandler = (evt) => {
-    const newType = evt.target.value;
-    this.updateElement({ type: newType });
-    this._callback.typeChange?.(newType);
+    this.updateElement({ type: evt.target.value });
+    this.#handleTypeChange?.(evt.target.value);
   };
 
   #destinationChangeHandler = (evt) => {

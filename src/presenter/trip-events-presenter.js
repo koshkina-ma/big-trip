@@ -9,8 +9,8 @@ export default class TripEventsPresenter {
   #eventListComponent = new TripEventListView();
   #noPointsComponent = null;
   #eventPresenters = new Map();
-  #openedEditForm = null;
-  #openedEventComponent = null;
+  #editForm = null;
+  #eventCard = null;
   #events = [];
   #eventsModel;
 
@@ -41,8 +41,8 @@ export default class TripEventsPresenter {
 
 
   resetView() {
-    if (this.#openedEditForm && this.#openedEventComponent) {
-      this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
+    if (this.#editForm) {
+      this.#closeEditForm();
     }
   }
 
@@ -55,15 +55,17 @@ export default class TripEventsPresenter {
     const eventComponent = new TripEventItemView({
       event,
       onRollupClick: () => {
-        if (this.#openedEditForm) {
-          this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
+        debugger;
+        if (this.#editForm) {
+          this.#closeEditForm();
         }
-        this.#openedEditForm = this.#eventPresenters.get(event.id).editFormComponent;
-        this.#openedEventComponent = eventComponent;
-        this.#replaceEventToForm(eventComponent, this.#openedEditForm);
+
+        const editFormComponent = this.#eventPresenters.get(event.id).editFormComponent;
+        this.#openEditForm(eventComponent, editFormComponent);
       },
-      onFavoriteClick: (evtEvent) => {
-        this.#handleFavoriteToggle(evtEvent);
+
+      onFavoriteClick: (evt) => {
+        this.#handleFavoriteToggle(evt);
       }
     });
 
@@ -74,25 +76,24 @@ export default class TripEventsPresenter {
           event.type,
           event.offers.map((o) => o.id)
         )
-      },
-      onFormSubmit: (actionType, updateData) => { // Добавляем actionType
-        this.#onDataChange(actionType, 'PATCH', updateData);
       }
+    });
+
+    editFormComponent.setFormSubmitHandler((actionType, updatedEvent) => {
+      this.#onDataChange(actionType, 'PATCH', updatedEvent);
     });
 
     editFormComponent.setTypeChangeHandler((type) => {
       const selectedIds = this.#eventsModel.findById(event.id).offers; // Используем findById
       const currentOffers = this.#eventsModel.getOffersByType(type, selectedIds);
-      editFormComponent.updateElement({ offers: currentOffers });
-    });
-
-    editFormComponent.setFormSubmitHandler((actionType, updatedEvent) => {
-      console.log('HANDLING FORM SUBMIT');
-      this.#onDataChange(actionType, 'PATCH', updatedEvent);
+      editFormComponent.updateElement({
+        offers: currentOffers,
+        type
+      });
     });
 
     editFormComponent.setRollupClickHandler(() => {
-      this.#replaceFormToEvent(editFormComponent, eventComponent);
+      this.#closeEditForm();
     });
 
     render(eventComponent, this.#eventListComponent.element);
@@ -105,10 +106,8 @@ export default class TripEventsPresenter {
       this.#events[index] = updatedEvent;
     }
 
-    if (this.#openedEditForm) {
-      this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
-      this.#openedEditForm = null;
-      this.#openedEventComponent = null;
+    if (this.#editForm) {
+      this.#closeEditForm();
     }
 
     const presenter = this.#eventPresenters.get(updatedEvent.id);
@@ -116,12 +115,11 @@ export default class TripEventsPresenter {
       const newEventComponent = new TripEventItemView({
         event: updatedEvent,
         onRollupClick: () => {
-          if (this.#openedEditForm) {
-            this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
+          if (this.#editForm) {
+            this.#closeEditForm();
           }
-          this.#openedEditForm = this.#eventPresenters.get(updatedEvent.id).editFormComponent;
-          this.#openedEventComponent = newEventComponent;
-          this.#replaceEventToForm(newEventComponent, this.#openedEditForm);
+          const editFormComponent = this.#eventPresenters.get(updatedEvent.id).editFormComponent;
+          this.#openEditForm(newEventComponent, editFormComponent);
         },
         onFavoriteClick: this.#handleFavoriteToggle
       });
@@ -144,25 +142,32 @@ export default class TripEventsPresenter {
     );
   };
 
-  #replaceEventToForm(eventComponent, editFormComponent) {
+  #openEditForm(eventComponent, editFormComponent) {
+    debugger;
     if (this.#onModeChange) {
       this.#onModeChange();
     }
     replace(editFormComponent, eventComponent);
+    this.#editForm = editFormComponent;
+    this.#eventCard = eventComponent;
     document.addEventListener('keydown', this.#handleEscKeyDown);
   }
 
-  #replaceFormToEvent(editFormComponent, eventComponent) {
-    replace(eventComponent, editFormComponent);
+  #closeEditForm() {
+    if (!this.#editForm || !this.#eventCard) {
+      return;
+    }
+    replace(this.#eventCard, this.#editForm);
     document.removeEventListener('keydown', this.#handleEscKeyDown);
-    this.#openedEditForm = null;
-    this.#openedEventComponent = null;
+
+    this.#editForm = null;
+    this.#eventCard = null;
   }
 
   #handleEscKeyDown = (evt) => {
     if (evt.key === 'Escape' || evt.key === 'Esc') {
-      if (this.#openedEditForm && this.#openedEventComponent) {
-        this.#replaceFormToEvent(this.#openedEditForm, this.#openedEventComponent);
+      if (this.#editForm && this.#eventCard) {
+        this.#closeEditForm();
       }
     }
   };
@@ -178,8 +183,8 @@ export default class TripEventsPresenter {
     this.#eventListComponent = new TripEventListView();
     this.#noPointsComponent = null;
     this.#eventPresenters.clear();
-    this.#openedEditForm = null;
-    this.#openedEventComponent = null;
+    this.#editForm = null;
+    this.#eventCard = null;
   }
 
 

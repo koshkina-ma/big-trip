@@ -1,40 +1,31 @@
 import TripInfoPresenter from './trip-info-presenter.js';
 import TripSortPresenter from './trip-sort-presenter.js';
 import TripEventsPresenter from './trip-events-presenter.js';
-
-import { filter } from '../utils/filter.js';
-import { SortType, FilterType } from '../const.js';
+import { SortType, UpdateType } from '../const.js';
 
 export default class TripPresenter {
   #eventsContainer = null;
   #sortContainer = null;
   #listContainer = null;
-
   #tripInfoContainer = null;
-
   #eventsModel = null;
+  #filterModel = null;
 
-  //какой-то одноименный геттер, проверить место в модели у меня getEvents
-  get Events() {
-    return this.#eventsModel.events;
-  }
-
-  #filterType = FilterType.EVERYTHING;
   #currentSortType = SortType.DAY;
-
   #tripInfoPresenter = null;
   #tripSortPresenter = null;
   #tripEventsPresenter = null;
 
-  constructor({ eventsContainer, eventsModel }) {
+  constructor({ eventsContainer, eventsModel, filterModel }) {
     this.#eventsContainer = eventsContainer;
     this.#eventsModel = eventsModel;
+    this.#filterModel = filterModel;
 
     this.#eventsModel.addObserver(this.#handleModelEvent);
+    this.#filterModel.addObserver(this.#handleModelEvent);
 
     this.#sortContainer = this.#eventsContainer.querySelector('.trip-events__sort-container');
     this.#listContainer = this.#eventsContainer.querySelector('.trip-events__list');
-
     this.#tripInfoContainer = document.querySelector('.trip-main__trip-info');
 
     this.#tripInfoPresenter = new TripInfoPresenter(this.#tripInfoContainer);
@@ -48,34 +39,17 @@ export default class TripPresenter {
     );
   }
 
-  init({ filterType = FilterType.EVERYTHING, sortType = SortType.DAY } = {}) {
-    if (this.#filterType !== filterType) {
-      this.#filterType = filterType;
-      this.#currentSortType = SortType.DAY;
-      if (this.#tripSortPresenter) {
-        this.#tripSortPresenter.setSortType(this.#currentSortType);
-      }
-    }
+  init({ sortType = SortType.DAY } = {}) {
     if (this.#currentSortType !== sortType) {
       this.#currentSortType = sortType;
     }
+    const events = this.#getFilteredSortedEvents();
+    this.#renderTrip(events);
+  }
 
-    const allEvents = this.#eventsModel.getEvents();
-    const filteredEvents = filter[this.#filterType](allEvents);
-    const sortedEvents = this.#getSortedEvents(filteredEvents);
-
-    this.#tripInfoPresenter.init(allEvents);
-
-    if (!this.#tripSortPresenter) {
-      this.#tripSortPresenter = new TripSortPresenter(
-        this.#sortContainer,
-        this.#currentSortType,
-        this.#handleSortTypeChange
-      );
-    }
-    this.#tripSortPresenter.init();
-
-    this.#tripEventsPresenter.init(sortedEvents, this.#filterType);
+  #getFilteredSortedEvents() {
+    const filteredEvents = this.#eventsModel.getEvents(this.#filterModel.filter); // Используем модель фильтров
+    return this.#getSortedEvents(filteredEvents);
   }
 
   #getSortedEvents(events) {
@@ -93,60 +67,62 @@ export default class TripPresenter {
     }
   }
 
+  #renderTrip(events) {
+    this.#tripInfoPresenter.init(events);
+
+    if (!this.#tripSortPresenter) {
+      this.#tripSortPresenter = new TripSortPresenter(
+        this.#sortContainer,
+        this.#currentSortType,
+        this.#handleSortTypeChange
+      );
+    }
+    this.#tripSortPresenter.init();
+    this.#tripEventsPresenter.init(events, this.#filterModel.filter);
+  }
+
+
   #handleSortTypeChange = (sortType) => {
     if (this.#currentSortType === sortType) {
       return;
     }
-
     this.#currentSortType = sortType;
-
-    const allEvents = this.#eventsModel.getEvents();
-    const filteredEvents = filter[this.#filterType](allEvents);
-    const sortedEvents = this.#getSortedEvents(filteredEvents);
-
-    this.#tripEventsPresenter.init(sortedEvents, this.#filterType);
+    this.#renderTrip(this.#getFilteredSortedEvents());
   };
 
+  #handleModelEvent = (updateType, data) => {
+    switch (updateType) {
+      case UpdateType.PATCH:
+        this.#tripEventsPresenter.updateEvent(data);
+        break;
+      case UpdateType.MINOR:
+        this.#renderTrip(this.#getFilteredSortedEvents());
+        break;
+      case UpdateType.MAJOR:
+        this.init();
+        break;
+    }
+  };
+
+
   #handleViewAction = (actionType, updateType, update) => {
-    console.log('PROCESSING ACTION:', actionType);
+    console.log('Action:', actionType, 'Data:', update);
     switch (actionType) {
       case 'UPDATE':
         this.#eventsModel.update(update);
         break;
-      case 'ADD_EVENT':
-        // Если добавление реализовано
-        if (this.#eventsModel.addEvent) {
-          this.#eventsModel.addEvent(update);
-        }
+      case 'ADD':
+        this.#eventsModel.add(update);
         break;
-      case 'DELETE_EVENT':
-        // Если удаление реализовано
-        if (this.#eventsModel.deleteEvent) {
-          this.#eventsModel.deleteEvent(update.id);
-        }
+      case 'DELETE':
+        this.#eventsModel.delete(update);
         break;
     }
-  };
-
-  #handleModelEvent = (updateType, data) => {
-    console.log('Main presenter received:', updateType, data.id);
-
-    if (updateType === 'update') {
-      this.#tripEventsPresenter.updateEvent(data); // Пробрасываем в дочерний презентер
-    }
-
-    // switch (updateType) {
-    //   case 'eventUpdated':
-    //     this.#tripEventsPresenter.updateEvent(data);
-    //     break;
-    //   case 'eventsUpdated':
-    //     this.init({ filterType: this.#filterType, sortType: this.#currentSortType });
-    //     break;
-    // }
   };
 
   #handleModeChange = () => {
-    //без изменений или пустой метод
+    debugger;
+    this.#tripEventsPresenter.resetView();
   };
 
   destroy() {
@@ -155,27 +131,3 @@ export default class TripPresenter {
     this.#eventsContainer.innerHTML = '';
   }
 }
-
-// //в этом файле надо добавить
-//  #handleViewAction = (actionType, updateType, update) => { про типи патч минор мажор тип обновления из конст.
-//     console.log(actionType, updateType, update);
-//     // Здесь будем вызывать обновление модели. тут какие-то Case и break 30:23 комит 7.4
-//     // actionType - действие пользователя, нужно чтобы понять, какой метод модели вызвать
-//     // updateType - тип изменений, нужно чтобы понять, что после нужно обновить
-//     // update - обновленные данные
-//   };
-
-//   #handleModelEvent = (updateType, data) => { как и что будет перерисовываться пишем в этот метод, тут switch
-//     console.log(updateType, data);
-//     // В зависимости от типа изменений решаем, что делать:
-//     // - обновить часть списка (например, когда поменялось описание)
-//     // - обновить список (например, когда задача ушла в архив)
-//     // - обновить всю доску (например, при переключении фильтра)
-//   };
-
-//   //      onDataChange: this.#handleViewAction,
-//    //   onModeChange: this.#handleModeChange
-//      });
-//     taskPresenter.init(task);
-
-

@@ -8,7 +8,7 @@ export default class FilterPresenter {
   #onFilterChange = null;
   #filterComponent = null;
 
-  constructor(container, filters, filterModel, onFilterChange) {
+  constructor({container, filters, filterModel, onFilterChange}) {
     this.#container = container;
     this.#filters = filters;
     this.#filterModel = filterModel;
