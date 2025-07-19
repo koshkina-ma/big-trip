@@ -55,12 +55,11 @@ export default class TripEventsPresenter {
     const eventComponent = new TripEventItemView({
       event,
       onRollupClick: () => {
-        debugger;
         if (this.#editForm) {
           this.#closeEditForm();
         }
 
-        const editFormComponent = this.#eventPresenters.get(event.id).editFormComponent;
+        const { editFormComponent } = this.#eventPresenters.get(event.id);
         this.#openEditForm(eventComponent, editFormComponent);
       },
 
@@ -69,7 +68,7 @@ export default class TripEventsPresenter {
       }
     });
 
-    const editFormComponent = new EditPointView({
+    const formComponent = new EditPointView({
       event: {
         ...event,
         offers: this.#eventsModel.getOffersByType(
@@ -79,25 +78,35 @@ export default class TripEventsPresenter {
       }
     });
 
-    editFormComponent.setFormSubmitHandler((actionType, updatedEvent) => {
-      this.#onDataChange(actionType, 'PATCH', updatedEvent);
+    formComponent.setFormSubmitHandler((actionType, updatedEvent) => {
+      const selectedOffers = updatedEvent.offers
+        .filter((offer) => offer.isChecked)
+        .map(({id, title, price}) => ({id, title, price}));
+
+      this.#onDataChange(actionType, 'PATCH', {
+        ...updatedEvent,
+        offers: selectedOffers
+      });
     });
 
-    editFormComponent.setTypeChangeHandler((type) => {
-      const selectedIds = this.#eventsModel.findById(event.id).offers; // Используем findById
+    formComponent.setTypeChangeHandler((type) => {
+      const selectedIds = this.#eventsModel.findById(event.id).offers;
       const currentOffers = this.#eventsModel.getOffersByType(type, selectedIds);
-      editFormComponent.updateElement({
+      formComponent.updateElement({
         offers: currentOffers,
         type
       });
     });
 
-    editFormComponent.setRollupClickHandler(() => {
+    formComponent.setRollupClickHandler(() => {
       this.#closeEditForm();
     });
 
     render(eventComponent, this.#eventListComponent.element);
-    this.#eventPresenters.set(event.id, { eventComponent, editFormComponent });
+    this.#eventPresenters.set(event.id, {
+      eventComponent,
+      editFormComponent: formComponent
+    });
   }
 
   updateEvent(updatedEvent) {
@@ -143,7 +152,6 @@ export default class TripEventsPresenter {
   };
 
   #openEditForm(eventComponent, editFormComponent) {
-    debugger;
     if (this.#onModeChange) {
       this.#onModeChange();
     }

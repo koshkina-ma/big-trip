@@ -73,7 +73,6 @@ export default class TripEventItemView extends AbstractView {
   }
 
   #rollupClickHandler = (evt) => {
-    debugger;
     //evt.stopPropagation();
     evt.preventDefault();
     this.#handleRollupClick(evt);

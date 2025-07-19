@@ -10,16 +10,17 @@ function createEditPointTemplate(state) {
   const {
     type,
     destination,
-    offers,
+    offers = [],
     dateFrom,
     dateTo,
     basePrice,
     id
   } = state;
 
-  const { name, description: destinationDescription, pictures } = destination;
+  const { name, description: destinationDescription, pictures = [] } = destination;
 
-  const offerMarkup = offers.map(({ id: offerId, title, price, isChecked }) => `
+  const hasOffers = offers.length > 0;
+  const offerMarkup = hasOffers ? offers.map(({ id: offerId, title, price, isChecked }) => `
     <div class="event__offer-selector">
       <input
         class="event__offer-checkbox visually-hidden"
@@ -34,11 +35,15 @@ function createEditPointTemplate(state) {
         <span class="event__offer-price">${price}</span>
       </label>
     </div>
-  `).join('');
+  `).join('') : '';
 
-  const photosMarkup = pictures.map(({ src, description }) => `
+  const hasPhotos = pictures.length > 0;
+  const photosMarkup = hasPhotos ? pictures.map(({ src, description }) => `
     <img class="event__photo" src="${src}" alt="${description}">
-  `).join('');
+  `).join('') : '';
+
+  const hasDescription = destinationDescription && destinationDescription.trim() !== '';
+  const shouldRenderDetails = hasOffers || hasDescription || hasPhotos;
 
   return (/*html*/`
     <li class="trip-events__item">
@@ -133,24 +138,34 @@ function createEditPointTemplate(state) {
           </button>
         </header>
 
+        ${shouldRenderDetails ? `
         <section class="event__details">
+        ${hasOffers ? `
           <section class="event__section event__section--offers">
             <h3 class="event__section-title event__section-title--offers">Offers</h3>
             <div class="event__available-offers">
               ${offerMarkup}
             </div>
           </section>
+          ` : ''}
 
+          ${hasDescription || hasPhotos ? `
           <section class="event__section event__section--destination">
             <h3 class="event__section-title event__section-title--destination">Destination</h3>
+            ${hasDescription ? `
             <p class="event__destination-description">${destinationDescription}</p>
+            ` : ''}
+          ${hasPhotos ? `
             <div class="event__photos-container">
               <div class="event__photos-tape">
                 ${photosMarkup}
               </div>
             </div>
+          ` : ''}
           </section>
+          ` : ''}
         </section>
+        ` : ''}
       </form>
     </li>
   `);
@@ -271,10 +286,11 @@ export default class EditPointView extends AbstractStatefulView {
       basePrice: Number(formData.get('event-price')),
       destination: destinations.find((dest) => dest.name === formData.get('event-destination')) || this._state.destination,
       offers: this._state.offers
-        .map((offer) => ({
+        ? this._state.offers.map((offer) => ({
           ...offer,
           isChecked: formData.get(`event-offer-${offer.id}`) === 'on'
         }))
+        : []
     };
     this.#handleFormSubmit('UPDATE', updatedPoint);
   };
