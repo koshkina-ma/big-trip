@@ -80,20 +80,21 @@ function createEditPointTemplate(state) {
             <label class="event__label event__type-output" for="event-destination-${id}">
               ${type.charAt(0).toUpperCase() + type.slice(1)}
             </label>
-            <input
+            <select
               class="event__input event__input--destination"
               id="event-destination-${id}"
-              type="text"
               name="event-destination"
-              value="${name}"
-              list="destination-list-${id}"
               required
-            >
-            <datalist id="destination-list-${id}">
-              <option value="Amsterdam"></option>
-              <option value="Geneva"></option>
-              <option value="Chamonix"></option>
-            </datalist>
+             >
+              ${destinations.map(dest => `
+               <option
+                  value="${dest.name}"
+                  ${dest.name === name ? 'selected' : ''}
+               >
+                  ${dest.name}
+               </option>
+               `).join('')}
+            </select>
           </div>
 
           <div class="event__field-group event__field-group--time">
@@ -251,7 +252,7 @@ export default class EditPointView extends AbstractStatefulView {
 
     const form = this.element.querySelector('form');
 
-    form.addEventListener('input', (evt) => {
+    form.addEventListener('change', (evt) => {
       const { name, value } = evt.target;
 
       if (name === 'event-price') {
