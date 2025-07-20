@@ -68,9 +68,12 @@ export default class TripEventsPresenter {
       }
     });
 
+    console.log('--- Создание формы для точки ---');
+    console.log('ID точки:', event.id, 'Тип:', event.type);
+
     const formComponent = new EditPointView({
       event: {
-        ...event,
+        ...structuredClone(this.#eventsModel.findById(event.id)),
         offers: this.#eventsModel.getOffersByType(
           event.type,
           event.offers.map((o) => o.id)
@@ -170,6 +173,9 @@ export default class TripEventsPresenter {
     if (!this.#editForm || !this.#eventCard) {
       return;
     }
+
+    this.#editForm.resetForm();
+
     replace(this.#eventCard, this.#editForm);
     document.removeEventListener('keydown', this.#handleEscKeyDown);
 
@@ -178,10 +184,9 @@ export default class TripEventsPresenter {
   }
 
   #handleEscKeyDown = (evt) => {
-    if (evt.key === 'Escape' || evt.key === 'Esc') {
-      if (this.#editForm && this.#eventCard) {
-        this.#closeEditForm();
-      }
+    if ((evt.key === 'Escape' || evt.key === 'Esc') && this.#editForm) {
+      evt.preventDefault();
+      this.#closeEditForm();
     }
   };
 

@@ -1,4 +1,3 @@
-//import he from 'he'; - пользователь что-то вводит у меня?
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { destinations } from '../mock/destinations.js';
 import { getEditPointFormattedDate } from '../utils/utils.js';
@@ -26,7 +25,8 @@ function createEditPointTemplate(state) {
         class="event__offer-checkbox visually-hidden"
         id="event-offer-${offerId}-${id}"
         type="checkbox"
-        name="event-offer-${offerId}"
+        name="event-offer"
+        data-offer-id="${offerId}"
         ${isChecked ? 'checked' : ''}
       >
       <label class="event__offer-label" for="event-offer-${offerId}-${id}">
@@ -172,6 +172,8 @@ function createEditPointTemplate(state) {
 }
 
 export default class EditPointView extends AbstractStatefulView {
+  #isResetting = false;
+  #originalData = null;
   #handleFormSubmit = null;
   #handleDeleteClick = null;
   #handleRollupClick = null;
@@ -181,7 +183,21 @@ export default class EditPointView extends AbstractStatefulView {
 
   constructor({ event }) {
     super();
-    this._state = structuredClone(event);
+    console.log('--- Форма создается ---');
+    console.log('Полученные данные:', JSON.parse(JSON.stringify(event)));
+
+    this.#originalData = {
+      ...event,
+      destination: {...event.destination},
+      offers: event.offers.map((offer) => ({...offer})),
+      dateFrom: new Date(event.dateFrom),
+      dateTo: new Date(event.dateTo)
+    };
+    this._state = structuredClone(this.#originalData);
+
+    console.log('Сохранено как исходные данные:', JSON.parse(JSON.stringify(this.#originalData)));
+    console.log('Текущее состояние:', JSON.parse(JSON.stringify(this._state)));
+
     this.#setFlatpickr();
     this._restoreHandlers();
   }
@@ -206,9 +222,71 @@ export default class EditPointView extends AbstractStatefulView {
     this.#handleDeleteClick = callback;
   }
 
+  resetForm = () => {
+    console.group('--- СБРОС ФОРМЫ ---');
+
+    if (!this.#originalData) {
+      console.error('Ошибка: исходные данные не найдены!');
+      return;
+    }
+
+    console.log('Текущее состояние:', JSON.parse(JSON.stringify(this._state)));
+    console.log('Сбрасываем к:', JSON.parse(JSON.stringify(this.#originalData)));
+
+    if (this.#isResetting) {
+      console.warn('Предотвращен повторный сброс');
+      return;
+    }
+
+    this.#isResetting = true;
+
+    this.updateElement(structuredClone(this.#originalData));
+    console.log('Сброс завершен. Новое состояние:', JSON.parse(JSON.stringify(this._state)));
+
+    this.#isResetting = false;
+    console.groupEnd();
+  };
+
   _restoreHandlers() {
-    this.element.querySelector('form')
-      .addEventListener('submit', this.#formSubmitHandler);
+
+    const form = this.element.querySelector('form');
+
+    form.addEventListener('input', (evt) => {
+      const { name, value } = evt.target;
+
+      if (name === 'event-price') {
+        this.updateElement({ basePrice: Number(value) });
+      } else if (name === 'event-destination') {
+        const newDest = destinations.find((d) => d.name === value);
+        if (newDest) {
+          this.updateElement({ destination: newDest });
+        }
+      }
+      // Новые простые поля добавляются здесь
+    });
+
+    form.querySelectorAll('.event__offer-checkbox').forEach((checkbox) => {
+      checkbox.addEventListener('change', (evt) => {
+        const offerId = evt.target.dataset.offerId;
+        if (!offerId) {
+          console.error('Offer ID not found in:', evt.target);
+          return;
+        }
+
+        const offers = this._state.offers.map((offer) => {
+          const isSelected = offer.id === offerId;
+          if (isSelected) {
+            console.log(`Updating offer ${offerId} to`, evt.target.checked);
+          }
+          return isSelected ? { ...offer, isChecked: evt.target.checked } : offer;
+        });
+
+        this.updateElement({ offers });
+      });
+    });
+
+
+    form.addEventListener('submit', this.#formSubmitHandler);
 
     this.element.querySelector('.event__reset-btn')
       .addEventListener('click', this.#deleteClickHandler);
@@ -218,9 +296,6 @@ export default class EditPointView extends AbstractStatefulView {
 
     this.element.querySelectorAll('.event__type-input')
       .forEach((input) => input.addEventListener('change', this.#eventTypeChangeHandler));
-
-    this.element.querySelector('.event__input--destination')
-      .addEventListener('change', this.#destinationChangeHandler);
 
     this.#setFlatpickr();
   }
@@ -242,7 +317,10 @@ export default class EditPointView extends AbstractStatefulView {
       enableTime: true,
       dateFormat: 'd/m/y H:i',
       defaultDate: this._state.dateFrom,
-      onChange: this.#startDateChangeHandler,
+      onChange: (selectedDates) => {
+        this.#startDateChangeHandler(selectedDates);
+        this._setState({ dateFrom: selectedDates[0] });
+      },
     });
 
     this.#flatpickrEnd = flatpickr(endInput, {
@@ -250,34 +328,35 @@ export default class EditPointView extends AbstractStatefulView {
       dateFormat: 'd/m/y H:i',
       defaultDate: this._state.dateTo,
       minDate: this._state.dateFrom,
-      onChange: this.#endDateChangeHandler,
+      onChange: (selectedDates) => {
+        this.#endDateChangeHandler(selectedDates);
+        this._setState({ dateTo: selectedDates[0] });
+      },
     });
   }
 
   #startDateChangeHandler = ([selectedDate]) => {
-    if (selectedDate > this._state.dateTo) {
-      this.updateElement({
-        dateFrom: selectedDate,
-        dateTo: selectedDate,
-      });
-    } else {
-      this.updateElement({
-        dateFrom: selectedDate,
-      });
+    if (!selectedDate) {
+      return;
     }
+    const update = {
+      dateFrom: selectedDate,
+      ...(selectedDate > this._state.dateTo && { dateTo: selectedDate })
+    };
+    this.updateElement(update);
   };
 
   #endDateChangeHandler = ([selectedDate]) => {
-    if (selectedDate < this._state.dateFrom) {
-      this.updateElement({
-        dateFrom: selectedDate,
-        dateTo: selectedDate,
-      });
-    } else {
-      this.updateElement({
-        dateTo: selectedDate,
-      });
+    if (!selectedDate) {
+      return;
     }
+
+    const update = {
+      dateTo: selectedDate,
+      ...(selectedDate < this._state.dateFrom && { dateFrom: selectedDate })
+    };
+
+    this.updateElement(update);
   };
 
 
