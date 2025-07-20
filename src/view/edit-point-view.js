@@ -173,6 +173,7 @@ function createEditPointTemplate(state) {
 
 export default class EditPointView extends AbstractStatefulView {
   #handleFormSubmit = null;
+  #handleDeleteClick = null;
   #handleRollupClick = null;
   #handleTypeChange = null;
   #flatpickrStart = null;
@@ -201,9 +202,16 @@ export default class EditPointView extends AbstractStatefulView {
     this.#handleTypeChange = callback;
   }
 
+  setDeleteClickHandler(callback) {
+    this.#handleDeleteClick = callback;
+  }
+
   _restoreHandlers() {
     this.element.querySelector('form')
       .addEventListener('submit', this.#formSubmitHandler);
+
+    this.element.querySelector('.event__reset-btn')
+      .addEventListener('click', this.#deleteClickHandler);
 
     this.element.querySelector('.event__rollup-btn')
       .addEventListener('click', this.#rollupClickHandler);
@@ -293,6 +301,11 @@ export default class EditPointView extends AbstractStatefulView {
         : []
     };
     this.#handleFormSubmit('UPDATE', updatedPoint);
+  };
+
+  #deleteClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleDeleteClick?.(this._state);
   };
 
   #rollupClickHandler = (evt) => {

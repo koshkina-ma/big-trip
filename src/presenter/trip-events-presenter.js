@@ -89,6 +89,11 @@ export default class TripEventsPresenter {
       });
     });
 
+    formComponent.setDeleteClickHandler((pointToDelete) => {
+      this.#onDataChange('DELETE', 'MINOR', pointToDelete.id);
+      this.#closeEditForm();
+    });
+
     formComponent.setTypeChangeHandler((type) => {
       const selectedIds = this.#eventsModel.findById(event.id).offers;
       const currentOffers = this.#eventsModel.getOffersByType(type, selectedIds);

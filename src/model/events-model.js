@@ -75,6 +75,9 @@ export default class EventsModel extends Observable {
   }
 
   delete(id) {
+    if (!this.#events.some((event) => event.id === id)) {
+      return;
+    }
     this.#events = this.#events.filter((event) => event.id !== id);
     this._notify(UpdateType.MINOR, id);
   }

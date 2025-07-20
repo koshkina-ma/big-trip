@@ -28,7 +28,11 @@ export default class TripPresenter {
     this.#listContainer = this.#eventsContainer.querySelector('.trip-events__list');
     this.#tripInfoContainer = document.querySelector('.trip-main__trip-info');
 
-    this.#tripInfoPresenter = new TripInfoPresenter(this.#tripInfoContainer);
+    this.#tripInfoPresenter = new TripInfoPresenter({
+      container: this.#tripInfoContainer,
+      eventsModel: this.#eventsModel
+    });
+
     this.#tripEventsPresenter = new TripEventsPresenter(
       this.#listContainer,
       {
@@ -68,7 +72,7 @@ export default class TripPresenter {
   }
 
   #renderTrip(events) {
-    this.#tripInfoPresenter.init(events);
+    this.#tripInfoPresenter.init();
 
     if (!this.#tripSortPresenter) {
       this.#tripSortPresenter = new TripSortPresenter(
@@ -93,9 +97,11 @@ export default class TripPresenter {
   #handleModelEvent = (updateType, data) => {
     switch (updateType) {
       case UpdateType.PATCH:
+        this.#tripInfoPresenter.init();
         this.#tripEventsPresenter.updateEvent(data);
         break;
       case UpdateType.MINOR:
+        this.#tripInfoPresenter.init();
         this.#renderTrip(this.#getFilteredSortedEvents());
         break;
       case UpdateType.MAJOR:
@@ -106,7 +112,6 @@ export default class TripPresenter {
 
 
   #handleViewAction = (actionType, updateType, update) => {
-    console.log('Action:', actionType, 'Data:', update);
     switch (actionType) {
       case 'UPDATE':
         this.#eventsModel.update(update);
@@ -121,7 +126,6 @@ export default class TripPresenter {
   };
 
   #handleModeChange = () => {
-    debugger;
     this.#tripEventsPresenter.resetView();
   };
 

@@ -68,8 +68,9 @@ function formatTripDates(points) {
 
 function calculateTotalCost(points) {
   return points.reduce((total, point) => {
-    const offersTotal = point.offers.reduce((sum, offer) => sum + offer.price, 0);
-    return total + point.basePrice + offersTotal;
+    const basePrice = point.basePrice || 0;
+    const offersTotal = point.offers?.reduce((sum, offer) => sum + (offer.price || 0), 0) || 0;
+    return total + basePrice + offersTotal;
   }, 0);
 }
 
