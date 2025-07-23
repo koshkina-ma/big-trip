@@ -1,7 +1,7 @@
 import TripInfoPresenter from './trip-info-presenter.js';
 import TripSortPresenter from './trip-sort-presenter.js';
 import TripEventsPresenter from './trip-events-presenter.js';
-import { SortType, UpdateType } from '../const.js';
+import { SortType, FilterType, UpdateType } from '../const.js';
 
 export default class TripPresenter {
   #eventsContainer = null;
@@ -99,17 +99,32 @@ export default class TripPresenter {
       case UpdateType.PATCH:
         this.#tripInfoPresenter.init();
         this.#tripEventsPresenter.updateEvent(data);
+        if (this.#currentSortType === SortType.DAY) {
+          this.#renderTrip(this.#getFilteredSortedEvents());
+        }
         break;
       case UpdateType.MINOR:
+        if (Object.values(FilterType).includes(data)) {
+          this.#resetSortToDay();
+        }
         this.#tripInfoPresenter.init();
         this.#renderTrip(this.#getFilteredSortedEvents());
         break;
       case UpdateType.MAJOR:
+        this.#resetSortToDay();
         this.init();
         break;
     }
   };
 
+  #resetSortToDay() {
+    if (this.#currentSortType !== SortType.DAY) {
+      this.#currentSortType = SortType.DAY;
+      if (this.#tripSortPresenter) {
+        this.#tripSortPresenter.setSortType(SortType.DAY);
+      }
+    }
+  }
 
   #handleViewAction = (actionType, updateType, update) => {
     switch (actionType) {
