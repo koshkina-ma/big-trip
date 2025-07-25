@@ -3,6 +3,7 @@ import TripEventItemView from '../view/trip-event-item-view.js';
 import EditPointView from '../view/edit-point-view.js';
 import NoPointsView from '../view/no-points-view.js';
 import { render, replace } from '../framework/render.js';
+import { UserAction, UpdateType } from '../const.js';
 
 export default class TripEventsPresenter {
   #eventsContainer = null;
@@ -90,9 +91,14 @@ export default class TripEventsPresenter {
       });
     });
 
-    formComponent.setDeleteClickHandler((pointToDelete) => {
-      console.log('[3] Presenter received delete', pointToDelete);
-      this.#onDataChange('DELETE', 'MINOR', pointToDelete.id);
+    formComponent.setDeleteClickHandler((pointId) => {
+      console.log('[3] Presenter received delete', pointId);
+
+      this.#onDataChange(
+        UserAction.DELETE_EVENT,
+        UpdateType.MINOR,
+        pointId
+      );
       this.#closeEditForm();
     });
 

@@ -2,6 +2,7 @@ import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { getEditPointFormattedDate } from '../utils/utils.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
+import { UserAction } from '../const.js';
 
 
 function createEditPointTemplate(state, destinations) {
@@ -335,12 +336,14 @@ export default class EditPointView extends AbstractStatefulView {
   };
 
   #deleteClickHandler = (evt) => {
-    console.log('[2] Delete handler called', {
-    stateId: this._state.id,
-    hasHandler: !!this.#handleDeleteClick
-  });
     evt.preventDefault();
-    this.#handleDeleteClick?.(EditPointView.parseStateToEvent(this._state));
+    console.log('[2] Data sent to presenter:', {
+      action: UserAction.DELETE_EVENT,
+      id: this._state.id
+    });
+    this.#handleDeleteClick?.(
+      this._state.id
+    );
   };
 
   #rollupClickHandler = (evt) => {

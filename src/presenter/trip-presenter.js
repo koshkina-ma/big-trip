@@ -1,7 +1,7 @@
 import TripInfoPresenter from './trip-info-presenter.js';
 import TripSortPresenter from './trip-sort-presenter.js';
 import TripEventsPresenter from './trip-events-presenter.js';
-import { SortType, FilterType, UpdateType } from '../const.js';
+import { SortType, FilterType, UpdateType, UserAction } from '../const.js';
 
 export default class TripPresenter {
   #eventsContainer = null;
@@ -128,13 +128,13 @@ export default class TripPresenter {
 
   #handleViewAction = (actionType, updateType, update) => {
     switch (actionType) {
-      case 'UPDATE':
+      case UserAction.UPDATE_EVENT:
         this.#eventsModel.update(update);
         break;
-      case 'ADD':
+      case UserAction.ADD_EVENT:
         this.#eventsModel.add(update);
         break;
-      case 'DELETE':
+      case UserAction.DELETE_EVENT:
         this.#eventsModel.delete(update);
         break;
     }

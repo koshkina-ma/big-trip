@@ -90,11 +90,13 @@ export default class EventsModel extends Observable {
   }
 
   delete(id) {
-    if (!this.#events.some((event) => event.id === id)) {
+    console.log('[4]Model deleting:', id, typeof id);
+    if (!id || typeof id !== 'string') { // Жёсткая проверка
+      console.error('Invalid ID:', id);
       return;
     }
     this.#events = this.#events.filter((event) => event.id !== id);
-    this._notify(UpdateType.MINOR, id);
+    this._notify(UpdateType.MINOR);
   }
 
   findById(id) {
