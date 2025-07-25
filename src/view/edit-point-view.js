@@ -1,11 +1,10 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
-import { destinations } from '../mock/destinations.js';
 import { getEditPointFormattedDate } from '../utils/utils.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
 
-function createEditPointTemplate(state) {
+function createEditPointTemplate(state, destinations) {
   const {
     type,
     destination,
@@ -86,7 +85,7 @@ function createEditPointTemplate(state) {
               name="event-destination"
               required
              >
-              ${destinations.map(dest => `
+              ${destinations.map((dest) => `
                <option
                   value="${dest.name}"
                   ${dest.name === name ? 'selected' : ''}
@@ -173,8 +172,7 @@ function createEditPointTemplate(state) {
 }
 
 export default class EditPointView extends AbstractStatefulView {
-  #isResetting = false;
-  #originalData = null;
+  #eventsModel = null;
   #handleFormSubmit = null;
   #handleDeleteClick = null;
   #handleRollupClick = null;
@@ -182,30 +180,30 @@ export default class EditPointView extends AbstractStatefulView {
   #flatpickrStart = null;
   #flatpickrEnd = null;
 
-  constructor({ event }) {
+  constructor({ event, eventsModel }) {
     super();
-    console.log('--- Форма создается ---');
-    console.log('Полученные данные:', JSON.parse(JSON.stringify(event)));
-
-    this.#originalData = {
-      ...event,
-      destination: {...event.destination},
-      offers: event.offers.map((offer) => ({...offer})),
-      dateFrom: new Date(event.dateFrom),
-      dateTo: new Date(event.dateTo)
-    };
-    this._state = structuredClone(this.#originalData);
-
-    console.log('Сохранено как исходные данные:', JSON.parse(JSON.stringify(this.#originalData)));
-    console.log('Текущее состояние:', JSON.parse(JSON.stringify(this._state)));
+    this.#eventsModel = eventsModel;
+    this._setState(EditPointView.parseEventToState(event));
 
     this.#setFlatpickr();
     this._restoreHandlers();
   }
 
-  get template() {
-    return createEditPointTemplate(this._state);
+  static parseEventToState(event) {
+    return {...event};
   }
+
+  static parseStateToEvent(state) {
+    return {...state};
+  }
+
+  get template() {
+    return createEditPointTemplate(this._state, this.#eventsModel.getDestinations());
+  }
+
+  resetForm = () => {
+    this._setState(EditPointView.parseEventToState(this._state));
+  };
 
   setFormSubmitHandler(callback) {
     this.#handleFormSubmit = callback;
@@ -223,70 +221,50 @@ export default class EditPointView extends AbstractStatefulView {
     this.#handleDeleteClick = callback;
   }
 
-  resetForm = () => {
-    console.group('--- СБРОС ФОРМЫ ---');
-
-    if (!this.#originalData) {
-      console.error('Ошибка: исходные данные не найдены!');
-      return;
-    }
-
-    console.log('Текущее состояние:', JSON.parse(JSON.stringify(this._state)));
-    console.log('Сбрасываем к:', JSON.parse(JSON.stringify(this.#originalData)));
-
-    if (this.#isResetting) {
-      console.warn('Предотвращен повторный сброс');
-      return;
-    }
-
-    this.#isResetting = true;
-
-    this.updateElement(structuredClone(this.#originalData));
-    console.log('Сброс завершен. Новое состояние:', JSON.parse(JSON.stringify(this._state)));
-
-    this.#isResetting = false;
-    console.groupEnd();
-  };
-
   _restoreHandlers() {
-
     const form = this.element.querySelector('form');
 
-    form.addEventListener('change', (evt) => {
-      const { name, value } = evt.target;
-
-      if (name === 'event-price') {
-        this.updateElement({ basePrice: Number(value) });
-      } else if (name === 'event-destination') {
-        const newDest = destinations.find((d) => d.name === value);
-        if (newDest) {
-          this.updateElement({ destination: newDest });
-        }
-      }
-      // Новые простые поля добавляются здесь
+    // Обработчик цены
+    form.querySelector('.event__input--price').addEventListener('change', (evt) => {
+      this._setState({
+        basePrice: Number(evt.target.value),
+      });
     });
 
+    // Обработчик направления (используем модель)
+    form.querySelector('.event__input--destination').addEventListener('change', (evt) => {
+      const newDestination = this.#eventsModel.getDestinationByName(evt.target.value);
+      if (newDestination) {
+        this.updateElement({ destination: newDestination });
+      }
+    });
+
+    // Обработчики офферов
     form.querySelectorAll('.event__offer-checkbox').forEach((checkbox) => {
       checkbox.addEventListener('change', (evt) => {
         const offerId = evt.target.dataset.offerId;
         if (!offerId) {
-          console.error('Offer ID not found in:', evt.target);
           return;
         }
 
-        const offers = this._state.offers.map((offer) => {
-          const isSelected = offer.id === offerId;
-          if (isSelected) {
-            console.log(`Updating offer ${offerId} to`, evt.target.checked);
-          }
-          return isSelected ? { ...offer, isChecked: evt.target.checked } : offer;
-        });
-
-        this.updateElement({ offers });
+        const offers = this._state.offers.map((offer) =>
+          offer.id === offerId
+            ? { ...offer, isChecked: evt.target.checked }
+            : offer
+        );
+        this._setState({ offers });
       });
     });
 
+    // Обработчики типа события
+    this.element.querySelectorAll('.event__type-input').forEach((input) => {
+      input.addEventListener('change', (evt) => {
+        this.updateElement({ type: evt.target.value });
+        this.#handleTypeChange?.(evt.target.value);
+      });
+    });
 
+    // Обработчики кнопок
     form.addEventListener('submit', this.#formSubmitHandler);
 
     this.element.querySelector('.event__reset-btn')
@@ -294,9 +272,6 @@ export default class EditPointView extends AbstractStatefulView {
 
     this.element.querySelector('.event__rollup-btn')
       .addEventListener('click', this.#rollupClickHandler);
-
-    this.element.querySelectorAll('.event__type-input')
-      .forEach((input) => input.addEventListener('change', this.#eventTypeChangeHandler));
 
     this.#setFlatpickr();
   }
@@ -311,101 +286,58 @@ export default class EditPointView extends AbstractStatefulView {
       this.#flatpickrEnd = null;
     }
 
-    const startInput = this.element.querySelector(`#event-start-time-${ this._state.id}`);
-    const endInput = this.element.querySelector(`#event-end-time-${ this._state.id}`);
+    const { id, dateFrom, dateTo } = this._state;
+    const startInput = this.element.querySelector(`#event-start-time-${id}`);
+    const endInput = this.element.querySelector(`#event-end-time-${id}`);
 
-    this.#flatpickrStart = flatpickr(startInput, {
-      enableTime: true,
-      dateFormat: 'd/m/y H:i',
-      defaultDate: this._state.dateFrom,
-      onChange: (selectedDates) => {
-        this.#startDateChangeHandler(selectedDates);
-        this._setState({ dateFrom: selectedDates[0] });
-      },
-    });
-
+    // 1. Инициализируем flatpickr для конечной даты ПЕРВЫМ
     this.#flatpickrEnd = flatpickr(endInput, {
       enableTime: true,
       dateFormat: 'd/m/y H:i',
-      defaultDate: this._state.dateTo,
-      minDate: this._state.dateFrom,
-      onChange: (selectedDates) => {
-        this.#endDateChangeHandler(selectedDates);
-        this._setState({ dateTo: selectedDates[0] });
-      },
+      defaultDate: dateTo,
+      minDate: dateFrom,
+      onChange: (dates) => this._setState({ dateTo: dates[0] })
+    });
+
+    // 2. Инициализируем flatpickr для начальной даты
+    this.#flatpickrStart = flatpickr(startInput, {
+      enableTime: true,
+      dateFormat: 'd/m/y H:i',
+      defaultDate: dateFrom,
+      onChange: (dates) => {
+        const newStart = dates[0];
+        const currentEnd = this.#flatpickrEnd.selectedDates[0] || this._state.dateTo;
+
+        // Атомарное обновление
+        this._setState({
+          dateFrom: newStart,
+          dateTo: newStart >= currentEnd ? newStart : currentEnd
+        });
+
+        // Принудительное обновление flatpickr после рендера
+        requestAnimationFrame(() => {
+          this.#flatpickrEnd.set('minDate', newStart);
+          if (newStart >= currentEnd) {
+            this.#flatpickrEnd.setDate(newStart);
+          }
+        });
+      }
     });
   }
 
-  #startDateChangeHandler = ([selectedDate]) => {
-    if (!selectedDate) {
-      return;
-    }
-    const update = {
-      dateFrom: selectedDate,
-      ...(selectedDate > this._state.dateTo && { dateTo: selectedDate })
-    };
-    this.updateElement(update);
-  };
-
-  #endDateChangeHandler = ([selectedDate]) => {
-    if (!selectedDate) {
-      return;
-    }
-
-    const update = {
-      dateTo: selectedDate,
-      ...(selectedDate < this._state.dateFrom && { dateFrom: selectedDate })
-    };
-
-    this.updateElement(update);
-  };
-
-
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-
-    if (!this.#handleFormSubmit) {
-      return;
-    }
-
-    const formData = new FormData(evt.target);
-    const updatedPoint = {
-      ...this._state,
-      basePrice: Number(formData.get('event-price')),
-      destination: destinations.find((dest) => dest.name === formData.get('event-destination')) || this._state.destination,
-      offers: this._state.offers
-        ? this._state.offers.map((offer) => ({
-          ...offer,
-          isChecked: formData.get(`event-offer-${offer.id}`) === 'on'
-        }))
-        : []
-    };
-    this.#handleFormSubmit('UPDATE', updatedPoint);
+    this.#handleFormSubmit?.('UPDATE', EditPointView.parseStateToEvent(this._state));
   };
 
   #deleteClickHandler = (evt) => {
     evt.preventDefault();
-    this.#handleDeleteClick?.(this._state);
+    this.#handleDeleteClick?.('DELETE', EditPointView.parseStateToEvent(this._state));
   };
 
   #rollupClickHandler = (evt) => {
     evt.preventDefault();
-    if (this.#handleRollupClick) {
-      this.#handleRollupClick(evt);
-    }
+    this.#handleRollupClick?.();
   };
 
-  #eventTypeChangeHandler = (evt) => {
-    this.updateElement({ type: evt.target.value });
-    this.#handleTypeChange?.(evt.target.value);
-  };
-
-  #destinationChangeHandler = (evt) => {
-    const newDestinationName = evt.target.value;
-    const newDestination = destinations.find((dest) => dest.name === newDestinationName);
-    if (!newDestination) {
-      return;
-    }
-    this.updateElement({ destination: newDestination });
-  };
 }

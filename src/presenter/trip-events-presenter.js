@@ -68,9 +68,6 @@ export default class TripEventsPresenter {
       }
     });
 
-    console.log('--- Создание формы для точки ---');
-    console.log('ID точки:', event.id, 'Тип:', event.type);
-
     const formComponent = new EditPointView({
       event: {
         ...structuredClone(this.#eventsModel.findById(event.id)),
@@ -78,7 +75,8 @@ export default class TripEventsPresenter {
           event.type,
           event.offers.map((o) => o.id)
         )
-      }
+      },
+      eventsModel: this.#eventsModel
     });
 
     formComponent.setFormSubmitHandler((actionType, updatedEvent) => {

@@ -55,8 +55,6 @@ const mockEventItems = [
   },
 ];
 
-console.log('Mock events IDs:', mockEventItems.map((e) => e.id));
-
 const allOffers = offers.flatMap((offerGroup) => offerGroup.offers);
 
 const offersMap = new Map(allOffers.map((offer) => [offer.id, offer]));

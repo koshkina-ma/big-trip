@@ -1,16 +1,19 @@
 import Observable from '../framework/observable.js';
 import { enrichedEventItems } from '../mock/event-item.js';
 import { offers } from '../mock/offers.js';
+import { destinations } from '../mock/destinations.js';
 import { FilterType, UpdateType } from '../const.js';
 
 export default class EventsModel extends Observable {
   #events;
   #offers;
+  #destinations;
 
   constructor() {
     super();
     this.#events = enrichedEventItems;
     this.#offers = offers;
+    this.#destinations = destinations;
   }
 
   // Основной метод с поддержкой фильтрации
@@ -27,9 +30,21 @@ export default class EventsModel extends Observable {
     }
   }
 
+  getDestinations() {
+    return [...this.#destinations];
+  }
+
+  getDestinationByName(name) {
+    return this.#destinations.find((dest) => dest.name === name);
+  }
+
+
   #getFutureEvents() {
     const now = new Date();
-    return this.#events.filter((event) => new Date(event.dateFrom) > now);
+    return this.#events.filter((event) => {
+      const start = new Date(event.dateFrom);
+      return start > now; // Строго в будущем
+    });
   }
 
   #getPresentEvents() {
@@ -37,7 +52,7 @@ export default class EventsModel extends Observable {
     return this.#events.filter((event) => {
       const start = new Date(event.dateFrom);
       const end = new Date(event.dateTo);
-      return start <= now && now <= end;
+      return start <= now && end >= now;
     });
   }
 
