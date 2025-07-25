@@ -132,7 +132,7 @@ function createEditPointTemplate(state, destinations) {
           </div>
 
           <button class="event__save-btn btn btn--blue" type="submit">Save</button>
-          <button class="event__reset-btn" type="reset">Delete</button>
+          <button class="event__reset-btn" type="button">Delete</button>
           <button class="event__rollup-btn" type="button">
             <span class="visually-hidden">Open event</span>
           </button>
@@ -268,7 +268,11 @@ export default class EditPointView extends AbstractStatefulView {
     form.addEventListener('submit', this.#formSubmitHandler);
 
     this.element.querySelector('.event__reset-btn')
-      .addEventListener('click', this.#deleteClickHandler);
+      .addEventListener('click', (evt) => {
+        console.log('[1] Native click on Delete');
+        evt.preventDefault();
+        this.#deleteClickHandler(evt);
+      });
 
     this.element.querySelector('.event__rollup-btn')
       .addEventListener('click', this.#rollupClickHandler);
@@ -331,8 +335,12 @@ export default class EditPointView extends AbstractStatefulView {
   };
 
   #deleteClickHandler = (evt) => {
+    console.log('[2] Delete handler called', {
+    stateId: this._state.id,
+    hasHandler: !!this.#handleDeleteClick
+  });
     evt.preventDefault();
-    this.#handleDeleteClick?.('DELETE', EditPointView.parseStateToEvent(this._state));
+    this.#handleDeleteClick?.(EditPointView.parseStateToEvent(this._state));
   };
 
   #rollupClickHandler = (evt) => {

@@ -91,6 +91,7 @@ export default class TripEventsPresenter {
     });
 
     formComponent.setDeleteClickHandler((pointToDelete) => {
+      console.log('[3] Presenter received delete', pointToDelete);
       this.#onDataChange('DELETE', 'MINOR', pointToDelete.id);
       this.#closeEditForm();
     });
