@@ -16,12 +16,12 @@ export default class TripEventsPresenter {
   #eventsModel;
 
   #onDataChange = null;
-  #onModeChange = null;
+  // #onModeChange = null;
 
-  constructor(eventsContainer, { onDataChange, onModeChange }, eventsModel) {
+  constructor(eventsContainer, { onDataChange }, eventsModel) {
     this.#eventsContainer = eventsContainer;
     this.#onDataChange = onDataChange;
-    this.#onModeChange = onModeChange;
+    // this.#onModeChange = onModeChange;
     this.#eventsModel = eventsModel;
     this.#eventsModel.addObserver(this.#handleModelEvent);
   }
@@ -60,8 +60,9 @@ export default class TripEventsPresenter {
           this.#closeEditForm();
         }
 
-        const { editFormComponent } = this.#eventPresenters.get(event.id);
-        this.#openEditForm(eventComponent, editFormComponent);
+        // const { editFormComponent } = this.#eventPresenters.get(event.id);
+        // this.#openEditForm(eventComponent, editFormComponent);
+        this.#openEditForm(event.id, eventComponent);
       },
 
       onFavoriteClick: (evt) => {
@@ -69,56 +70,10 @@ export default class TripEventsPresenter {
       }
     });
 
-    const formComponent = new EditPointView({
-      event: {
-        ...structuredClone(this.#eventsModel.findById(event.id)),
-        offers: this.#eventsModel.getOffersByType(
-          event.type,
-          event.offers.map((o) => o.id)
-        )
-      },
-      eventsModel: this.#eventsModel
-    });
-
-    formComponent.setFormSubmitHandler((actionType, updatedEvent) => {
-      const selectedOffers = updatedEvent.offers
-        .filter((offer) => offer.isChecked)
-        .map(({id, title, price}) => ({id, title, price}));
-
-      this.#onDataChange(actionType, 'PATCH', {
-        ...updatedEvent,
-        offers: selectedOffers
-      });
-    });
-
-    formComponent.setDeleteClickHandler((pointId) => {
-      console.log('[3] Presenter received delete', pointId);
-
-      this.#onDataChange(
-        UserAction.DELETE_EVENT,
-        UpdateType.MINOR,
-        pointId
-      );
-      this.#closeEditForm();
-    });
-
-    formComponent.setTypeChangeHandler((type) => {
-      const selectedIds = this.#eventsModel.findById(event.id).offers;
-      const currentOffers = this.#eventsModel.getOffersByType(type, selectedIds);
-      formComponent.updateElement({
-        offers: currentOffers,
-        type
-      });
-    });
-
-    formComponent.setRollupClickHandler(() => {
-      this.#closeEditForm();
-    });
-
     render(eventComponent, this.#eventListComponent.element);
     this.#eventPresenters.set(event.id, {
-      eventComponent,
-      editFormComponent: formComponent
+      eventComponent
+      // editFormComponent: formComponent
     });
   }
 
@@ -158,21 +113,76 @@ export default class TripEventsPresenter {
   #handleFavoriteToggle = (event) => {
     const updatedEvent = { ...event, isFavorite: !event.isFavorite };
     this.#onDataChange(
-      'UPDATE',
-      'PATCH',
+      UserAction.UPDATE_EVENT,
+      UpdateType.PATCH,
       updatedEvent
     );
   };
 
-  #openEditForm(eventComponent, editFormComponent) {
-    if (this.#onModeChange) {
-      this.#onModeChange();
+  #openEditForm(eventId, eventComponent) {
+    if (this.#editForm) {
+      this.#closeEditForm();
     }
-    replace(editFormComponent, eventComponent);
-    this.#editForm = editFormComponent;
+
+    const eventData = this.#eventsModel.findById(eventId);
+    const formComponent = new EditPointView({
+      event: {
+        ...structuredClone(eventData),
+        offers: this.#eventsModel.getOffersByType(
+          eventData.type,
+          eventData.offers.map((o) => o.id)
+        )
+      },
+      eventsModel: this.#eventsModel
+    });
+
+    formComponent.setFormSubmitHandler((actionType, updatedEvent) => {
+      console.log('[Presenter] submit handler', actionType, updatedEvent);
+      const selectedOffers = updatedEvent.offers
+        .filter((offer) => offer.isChecked)
+        .map(({ id, title, price }) => ({ id, title, price }));
+
+      console.log('[Presenter] SUBMIT form', actionType, updatedEvent);
+
+      this.#onDataChange(actionType, UpdateType.MINOR, {
+        ...updatedEvent,
+        offers: selectedOffers
+      });
+    });
+
+    formComponent.setDeleteClickHandler((pointId) => {
+      this.#onDataChange(UserAction.DELETE_EVENT, UpdateType.MINOR, pointId);
+      this.#closeEditForm();
+    });
+
+    formComponent.setTypeChangeHandler((type) => {
+      const selectedIds = this.#eventsModel.findById(eventId).offers;
+      const currentOffers = this.#eventsModel.getOffersByType(type, selectedIds);
+      formComponent.updateElement({ offers: currentOffers, type });
+    });
+
+    formComponent.setRollupClickHandler(() => {
+      this.#closeEditForm();
+    });
+
+    replace(formComponent, eventComponent);
+
+    this.#editForm = formComponent;
     this.#eventCard = eventComponent;
+
     document.addEventListener('keydown', this.#handleEscKeyDown);
   }
+
+
+  // #openEditForm(eventComponent, editFormComponent) {
+  //   if (this.#onModeChange) {
+  //     this.#onModeChange();
+  //   }
+  //   replace(editFormComponent, eventComponent);
+  //   this.#editForm = editFormComponent;
+  //   this.#eventCard = eventComponent;
+  //   document.addEventListener('keydown', this.#handleEscKeyDown);
+  // }
 
   #closeEditForm() {
     if (!this.#editForm || !this.#eventCard) {
@@ -196,7 +206,9 @@ export default class TripEventsPresenter {
   };
 
   #handleModelEvent = (updateType, data) => {
-    if (updateType === 'update') {
+    // if (updateType === 'update')
+    console.log('[Presenter] handleModelEvent', updateType, data);
+    if (updateType === UpdateType.PATCH) {
       this.updateEvent(data); // Теперь форма будет закрываться
     }
   };

@@ -127,6 +127,7 @@ export default class TripPresenter {
   }
 
   #handleViewAction = (actionType, updateType, update) => {
+     console.log('[TripPresenter] handleViewAction', actionType, updateType, update);
     switch (actionType) {
       case UserAction.UPDATE_EVENT:
         this.#eventsModel.update(update);

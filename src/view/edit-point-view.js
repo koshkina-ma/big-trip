@@ -332,7 +332,7 @@ export default class EditPointView extends AbstractStatefulView {
 
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-    this.#handleFormSubmit?.('UPDATE', EditPointView.parseStateToEvent(this._state));
+    this.#handleFormSubmit?.(UserAction.UPDATE_EVENT, EditPointView.parseStateToEvent(this._state));
   };
 
   #deleteClickHandler = (evt) => {

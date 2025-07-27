@@ -71,6 +71,7 @@ export default class EventsModel extends Observable {
   }
 
   update(updatedEvent) {
+    console.log('[Model] update вызван с:', updatedEvent);
     const index = this.#events.findIndex((event) => event.id === updatedEvent.id);
     if (index === -1) {
       throw new Error('Event not found');
@@ -81,7 +82,7 @@ export default class EventsModel extends Observable {
       updatedEvent,
       ...this.#events.slice(index + 1)
     ];
-    this._notify(UpdateType.PATCH, updatedEvent);
+    this._notify(UpdateType.MINOR, updatedEvent);
   }
 
   add(event) {
