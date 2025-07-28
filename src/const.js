@@ -30,4 +30,6 @@ const UpdateType = {
   MAJOR: 'MAJOR',
 };
 
-export { SortType, FilterType, NoPointsText, UserAction, UpdateType };
+const DEFAULT_EVENT_TYPE = 'flight';
+
+export { SortType, FilterType, NoPointsText, UserAction, UpdateType, DEFAULT_EVENT_TYPE };

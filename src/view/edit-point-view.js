@@ -228,7 +228,7 @@ export default class EditPointView extends AbstractStatefulView {
     // Обработчик цены
     form.querySelector('.event__input--price').addEventListener('change', (evt) => {
       this._setState({
-        basePrice: Number(evt.target.value),
+        basePrice: Math.max(0, Math.trunc(Number(evt.target.value)) || 0),
       });
     });
 

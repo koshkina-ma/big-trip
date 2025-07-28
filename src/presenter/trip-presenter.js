@@ -1,6 +1,7 @@
 import TripInfoPresenter from './trip-info-presenter.js';
 import TripSortPresenter from './trip-sort-presenter.js';
 import TripEventsPresenter from './trip-events-presenter.js';
+import NewEventPresenter from './new-event-presenter.js';
 import { SortType, FilterType, UpdateType, UserAction } from '../const.js';
 
 export default class TripPresenter {
@@ -15,6 +16,7 @@ export default class TripPresenter {
   #tripInfoPresenter = null;
   #tripSortPresenter = null;
   #tripEventsPresenter = null;
+  #newEventPresenter = null;
 
   constructor({ eventsContainer, eventsModel, filterModel }) {
     this.#eventsContainer = eventsContainer;
@@ -41,6 +43,14 @@ export default class TripPresenter {
       },
       eventsModel
     );
+
+    this.#newEventPresenter = new NewEventPresenter({
+      container: this.#listContainer,
+      eventsModel: this.#eventsModel,
+      filterModel: this.#filterModel,
+      onDataChange: this.#handleViewAction,
+      newEventButton: document.querySelector('.trip-main__event-add-btn')
+    });
   }
 
   init({ sortType = SortType.DAY } = {}) {
@@ -49,6 +59,7 @@ export default class TripPresenter {
     }
     const events = this.#getFilteredSortedEvents();
     this.#renderTrip(events);
+    this.#newEventPresenter.init();
   }
 
   #getFilteredSortedEvents() {
@@ -127,7 +138,6 @@ export default class TripPresenter {
   }
 
   #handleViewAction = (actionType, updateType, update) => {
-     console.log('[TripPresenter] handleViewAction', actionType, updateType, update);
     switch (actionType) {
       case UserAction.UPDATE_EVENT:
         this.#eventsModel.update(update);
@@ -148,6 +158,7 @@ export default class TripPresenter {
   destroy() {
     this.#tripInfoPresenter.destroy();
     this.#tripSortPresenter?.destroy();
+    this.#newEventPresenter.destroyForm();
     this.#eventsContainer.innerHTML = '';
   }
 }

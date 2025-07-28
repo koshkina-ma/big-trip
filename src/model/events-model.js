@@ -62,16 +62,26 @@ export default class EventsModel extends Observable {
   }
 
   // Методы для работы с офферами
+  // getOffersByType(type, selectedOfferIds = []) {
+  //   const offerGroup = this.#offers.find((group) => group.type === type);
+  //   return offerGroup?.offers.map((offer) => ({
+  //     ...offer,
+  //     isChecked: selectedOfferIds.includes(offer.id)
+  //   })) || [];
+  // }
   getOffersByType(type, selectedOfferIds = []) {
     const offerGroup = this.#offers.find((group) => group.type === type);
-    return offerGroup?.offers.map((offer) => ({
+    if (!offerGroup) {
+      return []; // Если нет офферов для типа
+    }
+
+    return offerGroup.offers.map((offer) => ({
       ...offer,
-      isChecked: selectedOfferIds.includes(offer.id)
-    })) || [];
+      isChecked: selectedOfferIds.includes(offer.id) // Помечаем выбранные
+    }));
   }
 
   update(updatedEvent) {
-    console.log('[Model] update вызван с:', updatedEvent);
     const index = this.#events.findIndex((event) => event.id === updatedEvent.id);
     if (index === -1) {
       throw new Error('Event not found');
@@ -91,9 +101,7 @@ export default class EventsModel extends Observable {
   }
 
   delete(id) {
-    console.log('[4]Model deleting:', id, typeof id);
     if (!id || typeof id !== 'string') { // Жёсткая проверка
-      console.error('Invalid ID:', id);
       return;
     }
     this.#events = this.#events.filter((event) => event.id !== id);
