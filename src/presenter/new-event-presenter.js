@@ -1,6 +1,6 @@
 import AddNewPointView from '../view/add-new-point-view.js';
 import { render, remove } from '../framework/render.js';
-import { UserAction, UpdateType, FilterType, DEFAULT_EVENT_TYPE } from '../const.js';
+import { UserAction, UpdateType, FilterType } from '../const.js';
 
 export default class NewEventPresenter {
   #container = null;
@@ -17,6 +17,10 @@ export default class NewEventPresenter {
     this.#filterModel = filterModel;
     this.#handleDataChange = onDataChange;
     this.#newEventButton = newEventButton;
+
+    if (!this.#eventsModel) {
+      throw new Error('EventsModel is required');
+    }
   }
 
   init() {
@@ -35,8 +39,7 @@ export default class NewEventPresenter {
     }
 
     this.#addFormComponent = new AddNewPointView({
-      destinations: this.#eventsModel.getDestinations(),
-      offers: this.#getDefaultOffers(),
+      eventsModel: this.#eventsModel,
       onFormSubmit: this.#handleFormSubmit,
       onCancelClick: this.#handleCancelClick
     });
@@ -56,11 +59,16 @@ export default class NewEventPresenter {
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   }
 
-  #getDefaultOffers() {
-    return this.#eventsModel.getOffersByType(DEFAULT_EVENT_TYPE, []);
-  }
+  // #getDefaultOffers() {
+  //   return this.#eventsModel.getOffersByType(DEFAULT_EVENT_TYPE, []);
+  // }
 
   #handleFormSubmit = (event) => {
+  console.log('Received form data:', {
+    hasDestination: !!event.destination, // Проверить перед обработкой
+    rawData: event
+  });
+
     this.#handleDataChange(
       UserAction.ADD_EVENT,
       UpdateType.MINOR,

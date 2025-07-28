@@ -40,8 +40,24 @@ function formatRouteTime(startDate, endDate) {
   return { timeRange, duration: durationStr };
 }
 
+// function formatTripTitle(points) {
+//   const cities = points.map((point) => point.destination.name);
+
+//   if (cities.length <= 3) {
+//     return cities.join(' — ');
+//   }
+
+//   return `${cities[0]} — ... — ${cities[cities.length - 1]}`;
+// }
+
 function formatTripTitle(points) {
-  const cities = points.map((point) => point.destination.name);
+  const cities = points
+    .map((point) => point.destination?.name || '') // Защита от undefined
+    .filter((name) => name !== ''); // Фильтруем пустые значения
+
+  if (!cities.length) {
+    return '';
+  } // Если нет городов
 
   if (cities.length <= 3) {
     return cities.join(' — ');

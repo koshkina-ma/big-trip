@@ -1,5 +1,4 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
-
 import { getEditPointFormattedDate } from '../utils/utils.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
@@ -72,17 +71,17 @@ function createAddNewPointTemplate(state, destinations) {
           <!-- Destination -->
           <div class="event__field-group event__field-group--destination">
             <label class="event__label event__type-output" for="event-destination-new">
-              ${type}
+              ${state.type}
             </label>
             <select class="event__input event__input--destination"
                     id="event-destination-new"
                     name="event-destination"
                     required>
-              <option value=""></option>
-              ${destinations.map((dest) => `
-                <option value="${dest.name}" ${dest.name === name ? 'selected' : ''}>
-                  ${dest.name}
-                </option>
+            ${destinations.map((dest) => `
+              <option value="${dest.name}"
+                ${dest.name === state.destination?.name ? 'selected' : ''}>
+                ${dest.name}
+              </option>
               `).join('')}
             </select>
           </div>
@@ -165,31 +164,55 @@ export default class AddNewPointView extends AbstractStatefulView {
   #flatpickrStart = null;
   #flatpickrEnd = null;
 
-  constructor({ destinations, offers, eventsModel, onFormSubmit, onCancelClick }) {
+  constructor({ eventsModel, onFormSubmit, onCancelClick }) {
     super();
-    this.#destinations = destinations;
-    this.#offers = offers;
-    this.eventsModel = eventsModel;
+    if (!eventsModel) {
+      throw new Error('EventsModel is required');
+    }
+
+    this.#eventsModel = eventsModel;
     this.#handleFormSubmit = onFormSubmit;
     this.#handleCancelClick = onCancelClick;
+
+    this.#destinations = this.#eventsModel.getDestinations();
+    this.#offers = this.#eventsModel.getOffersByType(DEFAULT_EVENT_TYPE) || [];
 
     this._setState(this.#getDefaultState());
     this.#setFlatpickr();
     this._restoreHandlers();
   }
 
+  // #getDefaultState() {
+  //   const defaultDestination = this.#destinations.length > 0
+  //     ? this.#destinations[0]
+  //     : { name: '', description: '', pictures: [] };
+
+  //   return {
+  //     type: DEFAULT_EVENT_TYPE,
+  //     destination: defaultDestination,
+  //     offers: this.#offers,
+  //     dateFrom: new Date(),
+  //     dateTo: new Date(),
+  //     basePrice: 0
+  //   };
+  // }
+
   #getDefaultState() {
-    const defaultDestination = this.#destinations.length > 0
-      ? this.#destinations[0]
-      : { name: '', description: '', pictures: [] };
+    const defaultDestination = this.#destinations[0] || {
+      name: 'Unknown',
+      description: '',
+      pictures: []
+    };
 
     return {
       type: DEFAULT_EVENT_TYPE,
-      destination: defaultDestination,
-      offers: this.#offers.filter((offer) => offer.type === DEFAULT_EVENT_TYPE),
+      destination: defaultDestination, // Гарантированно будет объект с name
+      offers: this.#offers.map((offer) => ({ ...offer, isChecked: false })), // Добавляем флаги
       dateFrom: new Date(),
       dateTo: new Date(),
-      basePrice: 0
+      basePrice: 0,
+      isSaving: false,
+      isDisabled: false
     };
   }
 
@@ -225,9 +248,28 @@ export default class AddNewPointView extends AbstractStatefulView {
     this.#setFlatpickr();
   }
 
+  static parseStateToPoint(state) {
+    return {
+      ...state,
+      destination: state.destination || {
+        name: '',
+        description: '',
+        pictures: []
+      },
+      offers: state.offers
+        .filter((offer) => offer.isChecked)
+        .map((offer) => ({ id: offer.id }))
+    };
+  }
+
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-    this.#handleFormSubmit(UserAction.ADD_EVENT, this._state);
+      console.log('Form state before submit:', {
+    destination: this._state.destination, // Проверить наличие
+    hasDestination: !!this._state.destination
+  });
+    const eventData = AddNewPointView.parseStateToPoint(this._state);
+    this.#handleFormSubmit(eventData);
   };
 
   #cancelClickHandler = (evt) => {
@@ -236,6 +278,10 @@ export default class AddNewPointView extends AbstractStatefulView {
   };
 
   #typeChangeHandler = (evt) => {
+    if (!this.#eventsModel) {
+      return;
+    }
+
     const newType = evt.target.value;
     this.updateElement({
       type: newType,
@@ -244,12 +290,16 @@ export default class AddNewPointView extends AbstractStatefulView {
   };
 
   #destinationChangeHandler = (evt) => {
-    const selectedDestination = this.#destinations.find((dest) => dest.name === evt.target.value);
-    if (selectedDestination) {
-      this._setState({
-        destination: selectedDestination
-      });
+    const selectedName = evt.target.value;
+    if (!selectedName) {
+      return;
     }
+    const destination = this.#eventsModel.getDestinationByName(selectedName);
+
+    this.updateElement({
+      destination: destination || { name: selectedName } // Фолбэк
+    });
+    console.log('Selected destination:', destination);
   };
 
   #priceChangeHandler = (evt) => {
