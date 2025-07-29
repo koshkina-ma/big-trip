@@ -2,7 +2,7 @@ import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { getEditPointFormattedDate } from '../utils/utils.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-import { DEFAULT_EVENT_TYPE, UserAction } from '../const.js';
+import { DEFAULT_EVENT_TYPE } from '../const.js';
 
 function createAddNewPointTemplate(state, destinations) {
   const {
@@ -14,7 +14,7 @@ function createAddNewPointTemplate(state, destinations) {
     basePrice = 0
   } = state;
 
-  const { name = '', description = '', pictures = [] } = destination || {};
+  const { description = '', pictures = [] } = destination || {};
 
   const offersMarkup = offers.map((offer) => `
     <div class="event__offer-selector">
@@ -243,7 +243,12 @@ export default class AddNewPointView extends AbstractStatefulView {
     });
 
     this.element.querySelector('.event__input--destination').addEventListener('change', this.#destinationChangeHandler);
-    this.element.querySelector('.event__input--price').addEventListener('change', this.#priceChangeHandler);
+
+    this.element.querySelector('.event__input--price').addEventListener('change', (evt) => {
+      const numericValue = Math.max(0, Math.trunc(Number(evt.target.value.replace(/[^0-9]/g, ''))) || 0);
+      evt.target.value = numericValue;
+      this._setState({ basePrice: numericValue });
+    });
 
     this.#setFlatpickr();
   }
@@ -264,10 +269,10 @@ export default class AddNewPointView extends AbstractStatefulView {
 
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-      console.log('Form state before submit:', {
-    destination: this._state.destination, // Проверить наличие
-    hasDestination: !!this._state.destination
-  });
+    console.log('Form state before submit:', {
+      destination: this._state.destination, // Проверить наличие
+      hasDestination: !!this._state.destination
+    });
     const eventData = AddNewPointView.parseStateToPoint(this._state);
     this.#handleFormSubmit(eventData);
   };
