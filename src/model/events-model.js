@@ -8,9 +8,16 @@ export default class EventsModel extends Observable {
   #events;
   #offers;
   #destinations;
+  #eventsApiService = null;
 
-  constructor() {
+  constructor({eventsApiService}) {
     super();
+    this.#eventsApiService = eventsApiService;
+    this.#eventsApiService.events.then((events) => {
+      console.log(events);
+      //тут какие-то пометки про проблемы и про Адаптер
+    });
+
     this.#events = enrichedEventItems;
     this.#offers = offers;
     this.#destinations = destinations;
