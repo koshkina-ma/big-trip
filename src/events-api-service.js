@@ -24,22 +24,35 @@ export default class EventsApiService extends ApiService {
     return parsedResponse;
   }
 
-  #adaptToServer(event) { //TODO проверить, что нужно менять в моем ответе от сервера, заменить task на event
+  #adaptToServer(event) {
 
-    const adaptedTask = {...task,
-      'due_date': task.dueDate instanceof Date ? task.dueDate.toISOString() : null, // На сервере дата хранится в ISO формате
-      'is_archived': task.isArchive,
-      'is_favorite': task.isFavorite,
-      'repeating_days': task.repeating,
+    if (!event.dateFrom || !event.dateTo) {
+      throw new Error('Missing required date fields');
+    }
+    if (!event.destination?.id) {
+      throw new Error('Destination ID is required');
+    }
+
+    const adaptedEvent = {
+      ...event,
+      'base_price': Number(event.basePrice),
+      'date_from': event.dateFrom instanceof Date ? event.dateFrom.toISOString() : null,
+      'date_to': event.dateTo instanceof Date ? event.dateTo.toISOString() : null,
+      'destination': event.destination?.id || '',
+      'offers': event.offers?.map((offer) => offer.id) || [],
+      'is_favorite': event.isFavorite || false,
     };
 
     // Ненужные ключи мы удаляем
-    delete adaptedTask.dueDate;
-    delete adaptedTask.isArchive;
-    delete adaptedTask.isFavorite;
-    delete adaptedTask.repeating;
+    delete adaptedEvent.basePrice;
+    delete adaptedEvent.dateFrom;
+    delete adaptedEvent.dateTo;
+    delete adaptedEvent.isFavorite;
 
-    return adaptedTask;
+    console.log('[AdaptToServer] Input:', event);
+    console.log('[AdaptToServer] Output:', adaptedEvent);
+
+    return adaptedEvent;
   }
 
 }

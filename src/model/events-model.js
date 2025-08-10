@@ -13,8 +13,9 @@ export default class EventsModel extends Observable {
   constructor({eventsApiService}) {
     super();
     this.#eventsApiService = eventsApiService;
-    this.#eventsApiService.events.then((events) => { //TODO здесь добавить адаптер, проверить в консоли
-      console.log(events.map(this.#adaptToClient));
+
+    this.#eventsApiService.events.then((events) => {
+      console.log(events.map((event) => this.#adaptToClient(event)));
     });
 
     this.#events = enrichedEventItems;
@@ -67,14 +68,7 @@ export default class EventsModel extends Observable {
     return this.#events.filter((event) => new Date(event.dateTo) < now);
   }
 
-  // Методы для работы с офферами
-  // getOffersByType(type, selectedOfferIds = []) {
-  //   const offerGroup = this.#offers.find((group) => group.type === type);
-  //   return offerGroup?.offers.map((offer) => ({
-  //     ...offer,
-  //     isChecked: selectedOfferIds.includes(offer.id)
-  //   })) || [];
-  // }
+
   getOffersByType(type, selectedOfferIds = []) {
     const offerGroup = this.#offers.find((group) => group.type === type);
     if (!offerGroup) {
@@ -123,21 +117,58 @@ export default class EventsModel extends Observable {
     this._notify(UpdateType.MAJOR, this.#events); // Для полной перезагрузки данных
   }
 
-  #adaptToClient(event) { //TODO посмотреть, что на что менять
-    const adaptedTask = {...task,
-      dueDate: task['due_date'] !== null ? new Date(task['due_date']) : task['due_date'], // На клиенте дата хранится как экземпляр Date
-      isArchive: task['is_archived'],
-      isFavorite: task['is_favorite'],
-      repeating: task['repeating_days'],
+  #adaptToClient(serverEvent) {
+      console.log('--- Adapt start ---');
+  console.log('Raw serverEvent:', serverEvent);
+
+    if (!serverEvent || typeof serverEvent !== 'object') {
+      throw new Error('Invalid server event data');
+    }
+
+      // Проверка цены
+  console.log('base_price:', serverEvent.base_price);
+
+  // Проверка дат
+  console.log('date_from:', serverEvent.date_from);
+  console.log('date_to:', serverEvent.date_to);
+
+  // Проверка favorite
+  console.log('is_favorite:', serverEvent.is_favorite);
+
+  // Проверка destination
+  console.log('destination id from server:', serverEvent.destination);
+  console.log('matched destination object:',
+    this.#destinations.find((dest) => dest.id === serverEvent.destination)
+  );
+
+  // Проверка offers
+  console.log('offers array from server:', serverEvent.offers);
+
+    const adaptedEvent = {
+      ...serverEvent,
+      // Преобразование полей сервера → клиента
+      basePrice: serverEvent['base_price'],
+      dateFrom: new Date(serverEvent['date_from']),
+      dateTo: new Date(serverEvent['date_to']),
+      isFavorite: serverEvent['is_favorite'],
+      // Восстанавливаем полный объект destination
+      destination: this.#destinations.find((dest) => dest.id === serverEvent.destination) || null,
+      // Восстанавливаем полные объекты offers
+      offers: this.getOffersByType(
+        serverEvent.type,
+        serverEvent.offers || []
+      ).filter((offer) => offer.isChecked)
     };
 
-    // Ненужные ключи мы удаляем
-    delete adaptedTask['due_date'];
-    delete adaptedTask['is_archived'];
-    delete adaptedTask['is_favorite'];
-    delete adaptedTask['repeating_days'];
+    // Удаляем серверные поля (опционально)
+    delete adaptedEvent['base_price'];
+    delete adaptedEvent['date_from'];
+    delete adaptedEvent['date_to'];
+    delete adaptedEvent['is_favorite'];
 
-    return adaptedTask;
+console.log('--- Adapted event ---', adaptedEvent);
+
+    return adaptedEvent;
   }
 
 }
