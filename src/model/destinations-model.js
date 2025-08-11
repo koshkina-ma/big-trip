@@ -16,7 +16,7 @@ export default class DestinationsModel extends Observable {
         throw new Error('Destinations is not an array');
       }
       this.#destinations = destinations;
-      console.log('Загружены направления:', this.#destinations);
+      console.log('Загружены направления в модели:', this.#destinations);
     } catch (err) {
       console.error('Ошибка загрузки направлений:', err);
       this.#destinations = [];

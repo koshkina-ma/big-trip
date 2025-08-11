@@ -31,23 +31,25 @@ const eventsModel = new EventsModel({
 
 const filterModel = new FilterModel();
 
-eventsModel.init().then(() => {
-  const tripPresenter = new TripPresenter({
-    eventsContainer: siteMainElement,
-    eventsModel: eventsModel,
-    filterModel: filterModel
-  });
+const tripPresenter = new TripPresenter({
+  eventsContainer: siteMainElement,
+  eventsModel: eventsModel,
+  filterModel: filterModel
+});
 
-  const filterPresenter = new FilterPresenter({
-    container: filtersElement,
-    filters: filters,
-    filterModel: filterModel,
-    onFilterChange: (filterType) => {
-      filterModel.setFilter(filterType);
-      tripPresenter.init({ sortType: SortType.DAY });
-    }
-  });
+const filterPresenter = new FilterPresenter({
+  container: filtersElement,
+  filters: filters,
+  filterModel: filterModel,
+  onFilterChange: (filterType) => {
+    filterModel.setFilter(filterType);
+    tripPresenter.init({ sortType: SortType.DAY });
+  }
+});
 
-  filterPresenter.init();
-  tripPresenter.init({ sortType: SortType.DAY });
+filterPresenter.init();
+tripPresenter.init({ sortType: SortType.DAY });
+
+eventsModel.init().catch((err) => {
+  console.error('eventsModel.init failed:', err);
 });

@@ -20,31 +20,32 @@ export default class TripEventsPresenter {
   #eventsModel;
 
   #onDataChange = null;
-  // #onModeChange = null;
 
   constructor(eventsContainer, { onDataChange }, eventsModel) {
     this.#eventsContainer = eventsContainer;
     this.#onDataChange = onDataChange;
-    // this.#onModeChange = onModeChange;
     this.#eventsModel = eventsModel;
-    this.#eventsModel.addObserver(this.#handleModelEvent);
   }
 
   init(events, filterType) {
+    console.log('[TripEventsPresenter.init] events:', events.length, 'isLoading:', this.#eventsModel.isLoading);
     this.#events = events;
     this.#clear();
 
     if (this.#eventsModel.isLoading) {
+      console.log('[TripEventsPresenter] rendering loader...');
       this.#renderLoading();
       return;
     }
 
     if (events.length === 0) {
+      console.log('[TripEventsPresenter] rendering NoPointsView');
       this.#noPointsComponent = new NoPointsView(filterType);
       render(this.#noPointsComponent, this.#eventsContainer);
       return;
     }
 
+    console.log('[TripEventsPresenter] rendering event list');
     render(this.#eventListComponent, this.#eventsContainer);
     this.#renderEvents(this.#events);
   }
@@ -71,9 +72,6 @@ export default class TripEventsPresenter {
         if (this.#editForm) {
           this.#closeEditForm();
         }
-
-        // const { editFormComponent } = this.#eventPresenters.get(event.id);
-        // this.#openEditForm(eventComponent, editFormComponent);
         this.#openEditForm(event.id, eventComponent);
       },
 
@@ -85,7 +83,6 @@ export default class TripEventsPresenter {
     render(eventComponent, this.#eventListComponent.element);
     this.#eventPresenters.set(event.id, {
       eventComponent
-      // editFormComponent: formComponent
     });
   }
 
@@ -207,19 +204,6 @@ export default class TripEventsPresenter {
     }
   };
 
-  #handleModelEvent = (updateType, data) => {
-    switch (updateType) {
-      case UpdateType.INIT:
-        this.init(this.#eventsModel.getEvents(), this.#eventsModel.filter);
-        break;
-      case UpdateType.PATCH:
-        this.updateEvent(data);
-        break;
-      default:
-        this.init(this.#eventsModel.getEvents(), this.#eventsModel.filter);
-    }
-  };
-
   #clear() {
     this.#noPointsComponent?.removeElement();
     this.#loadingComponent?.removeElement();
@@ -231,6 +215,5 @@ export default class TripEventsPresenter {
     this.#editForm = null;
     this.#eventCard = null;
   }
-
 
 }

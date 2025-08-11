@@ -57,13 +57,18 @@ export default class TripPresenter {
     if (this.#currentSortType !== sortType) {
       this.#currentSortType = sortType;
     }
-    const events = this.#eventsModel.isLoading ? [] : this.#getFilteredSortedEvents();
-    this.#renderTrip(events);
+
+    this.#renderTrip([]);
     this.#newEventPresenter.init();
+
+    if (!this.#eventsModel.isLoading) {
+      const events = this.#getFilteredSortedEvents();
+      this.#renderTrip(events);
+    }
   }
 
   #getFilteredSortedEvents() {
-    const filteredEvents = this.#eventsModel.getEvents(this.#filterModel.filter); // Используем модель фильтров
+    const filteredEvents = this.#eventsModel.getEvents(this.#filterModel.filter);
     return this.#getSortedEvents(filteredEvents);
   }
 
@@ -106,8 +111,10 @@ export default class TripPresenter {
   };
 
   #handleModelEvent = (updateType, data) => {
+    console.log('[TripPresenter.#handleModelEvent] updateType:', updateType, 'data:', data);
     switch (updateType) {
       case UpdateType.INIT:
+        console.log('[TripPresenter] Model INIT — rendering events');
         this.#renderTrip(this.#getFilteredSortedEvents());
         break;
 
@@ -166,5 +173,7 @@ export default class TripPresenter {
     this.#tripSortPresenter?.destroy();
     this.#newEventPresenter.destroyForm();
     this.#eventsContainer.innerHTML = '';
+    this.#eventsModel.removeObserver(this.#handleModelEvent);
+    this.#filterModel.removeObserver(this.#handleModelEvent);
   }
 }

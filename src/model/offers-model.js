@@ -18,6 +18,9 @@ export default class OffersModel extends Observable {
     try {
       const offers = await this.#offersApiService.offers;
       this.#offers = [...offers];
+
+      console.log('Загружены офферы в модели:', this.#offers);
+
       this._notify(UpdateType.MINOR);
     } catch (error) {
       this.#offers = [];

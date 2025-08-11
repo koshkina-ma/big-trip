@@ -115,6 +115,23 @@ export default class EventsModel extends Observable {
     return this.#events.filter((event) => new Date(event.dateTo) < now);
   }
 
+  getOffersByType(type, selectedOfferIds) {
+    return this.#offersModel.getOffersByType(type, selectedOfferIds);
+  }
+
+  getDestinations() {
+    return this.#destinationsModel.getDestinations();
+  }
+
+  getDestinationById(id) {
+    return this.#destinationsModel.getDestinationById(id);
+  }
+
+  getDestinationByName(name) {
+    return this.#destinationsModel.getDestinationByName(name);
+  }
+
+
   #adaptToClient(serverEvent) {
     if (!serverEvent || typeof serverEvent !== 'object') {
       throw new Error('Invalid server event data');

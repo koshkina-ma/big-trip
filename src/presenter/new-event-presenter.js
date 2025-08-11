@@ -64,10 +64,10 @@ export default class NewEventPresenter {
   // }
 
   #handleFormSubmit = (event) => {
-  console.log('Received form data:', {
-    hasDestination: !!event.destination, // Проверить перед обработкой
-    rawData: event
-  });
+    console.log('Received form data:', {
+      hasDestination: !!event.destination, // Проверить перед обработкой
+      rawData: event
+    });
 
     this.#handleDataChange(
       UserAction.ADD_EVENT,
