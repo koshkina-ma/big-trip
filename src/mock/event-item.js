@@ -1,4 +1,5 @@
 //import {getRandomArrayElement} from '../utils/common.js';
+//TODO весь файл на удаление
 import { offers } from './offers.js';
 import { destinations } from './destinations.js';
 

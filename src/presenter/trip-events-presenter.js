@@ -2,6 +2,8 @@ import TripEventListView from '../view/trip-event-list-view.js';
 import TripEventItemView from '../view/trip-event-item-view.js';
 import EditPointView from '../view/edit-point-view.js';
 import NoPointsView from '../view/no-points-view.js';
+import LoadingView from '../view/loading-view.js';
+
 import { render, replace } from '../framework/render.js';
 import { UserAction, UpdateType } from '../const.js';
 
@@ -9,6 +11,8 @@ export default class TripEventsPresenter {
   #eventsContainer = null;
   #eventListComponent = new TripEventListView();
   #noPointsComponent = null;
+  #loadingComponent = new LoadingView();
+
   #eventPresenters = new Map();
   #editForm = null;
   #eventCard = null;
@@ -30,6 +34,11 @@ export default class TripEventsPresenter {
     this.#events = events;
     this.#clear();
 
+    if (this.#eventsModel.isLoading) {
+      this.#renderLoading();
+      return;
+    }
+
     if (events.length === 0) {
       this.#noPointsComponent = new NoPointsView(filterType);
       render(this.#noPointsComponent, this.#eventsContainer);
@@ -47,6 +56,9 @@ export default class TripEventsPresenter {
     }
   }
 
+  #renderLoading() {
+    render(this.#loadingComponent, this.#eventsContainer, 'afterbegin');
+  }
 
   #renderEvents(events) {
     events.forEach((event) => this.#renderEvent(event));
@@ -174,16 +186,6 @@ export default class TripEventsPresenter {
   }
 
 
-  // #openEditForm(eventComponent, editFormComponent) {
-  //   if (this.#onModeChange) {
-  //     this.#onModeChange();
-  //   }
-  //   replace(editFormComponent, eventComponent);
-  //   this.#editForm = editFormComponent;
-  //   this.#eventCard = eventComponent;
-  //   document.addEventListener('keydown', this.#handleEscKeyDown);
-  // }
-
   #closeEditForm() {
     if (!this.#editForm || !this.#eventCard) {
       return;
@@ -206,17 +208,25 @@ export default class TripEventsPresenter {
   };
 
   #handleModelEvent = (updateType, data) => {
-    // if (updateType === 'update')
-    console.log('[Presenter] handleModelEvent', updateType, data);
-    if (updateType === UpdateType.PATCH) {
-      this.updateEvent(data); // Теперь форма будет закрываться
+    switch (updateType) {
+      case UpdateType.INIT:
+        this.init(this.#eventsModel.getEvents(), this.#eventsModel.filter);
+        break;
+      case UpdateType.PATCH:
+        this.updateEvent(data);
+        break;
+      default:
+        this.init(this.#eventsModel.getEvents(), this.#eventsModel.filter);
     }
   };
 
   #clear() {
+    this.#noPointsComponent?.removeElement();
+    this.#loadingComponent?.removeElement();
+    this.#eventListComponent?.removeElement();
+
     this.#eventsContainer.innerHTML = '';
     this.#eventListComponent = new TripEventListView();
-    this.#noPointsComponent = null;
     this.#eventPresenters.clear();
     this.#editForm = null;
     this.#eventCard = null;

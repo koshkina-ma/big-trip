@@ -57,7 +57,7 @@ export default class TripPresenter {
     if (this.#currentSortType !== sortType) {
       this.#currentSortType = sortType;
     }
-    const events = this.#getFilteredSortedEvents();
+    const events = this.#eventsModel.isLoading ? [] : this.#getFilteredSortedEvents();
     this.#renderTrip(events);
     this.#newEventPresenter.init();
   }
@@ -107,6 +107,10 @@ export default class TripPresenter {
 
   #handleModelEvent = (updateType, data) => {
     switch (updateType) {
+      case UpdateType.INIT:
+        this.#renderTrip(this.#getFilteredSortedEvents());
+        break;
+
       case UpdateType.PATCH:
         this.#tripInfoPresenter.init();
         this.#tripEventsPresenter.updateEvent(data);
@@ -114,6 +118,7 @@ export default class TripPresenter {
           this.#renderTrip(this.#getFilteredSortedEvents());
         }
         break;
+
       case UpdateType.MINOR:
         if (Object.values(FilterType).includes(data)) {
           this.#resetSortToDay();
@@ -121,6 +126,7 @@ export default class TripPresenter {
         this.#tripInfoPresenter.init();
         this.#renderTrip(this.#getFilteredSortedEvents());
         break;
+
       case UpdateType.MAJOR:
         this.#resetSortToDay();
         this.init();

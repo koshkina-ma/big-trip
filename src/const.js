@@ -28,6 +28,7 @@ const UpdateType = {
   PATCH: 'PATCH',
   MINOR: 'MINOR',
   MAJOR: 'MAJOR',
+  INIT: 'INIT',
 };
 
 const DEFAULT_EVENT_TYPE = 'flight';

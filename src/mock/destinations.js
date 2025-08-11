@@ -1,3 +1,4 @@
+//TODO весь файл на удаление
 const destinations = [
   {
     id: 'dest-1',

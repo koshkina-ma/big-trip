@@ -1,29 +1,24 @@
 import Observable from '../framework/observable.js';
-import { enrichedEventItems } from '../mock/event-item.js';
-import { offers } from '../mock/offers.js';
-import { destinations } from '../mock/destinations.js';
 import { FilterType, UpdateType } from '../const.js';
 
 export default class EventsModel extends Observable {
-  #events;
-  #offers;
-  #destinations;
   #eventsApiService = null;
+  #destinationsModel = null;
+  #offersModel = null;
+  #events = [];
+  #isLoading = true;
 
-  constructor({eventsApiService}) {
+  constructor({ eventsApiService, destinationsModel, offersModel }) {
     super();
     this.#eventsApiService = eventsApiService;
-
-    this.#eventsApiService.events.then((events) => {
-      console.log(events.map((event) => this.#adaptToClient(event)));
-    });
-
-    this.#events = enrichedEventItems;
-    this.#offers = offers;
-    this.#destinations = destinations;
+    this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
   }
 
-  // Основной метод с поддержкой фильтрации
+  get isLoading() {
+    return this.#isLoading;
+  }
+
   getEvents(filterType = FilterType.EVERYTHING) {
     switch (filterType) {
       case FilterType.FUTURE:
@@ -37,48 +32,28 @@ export default class EventsModel extends Observable {
     }
   }
 
-  getDestinations() {
-    return [...this.#destinations];
-  }
+  async init() {
+    this.#isLoading = true;
 
-  getDestinationByName(name) {
-    return this.#destinations.find((dest) => dest.name === name);
-  }
+    try {
+      await this.#destinationsModel.init();
+      await this.#offersModel.init();
 
+      const events = await this.#eventsApiService.events;
+      this.#events = events.map((event) => this.#adaptToClient(event));
 
-  #getFutureEvents() {
-    const now = new Date();
-    return this.#events.filter((event) => {
-      const start = new Date(event.dateFrom);
-      return start > now; // Строго в будущем
-    });
-  }
+      this.#isLoading = false;
 
-  #getPresentEvents() {
-    const now = new Date();
-    return this.#events.filter((event) => {
-      const start = new Date(event.dateFrom);
-      const end = new Date(event.dateTo);
-      return start <= now && end >= now;
-    });
-  }
+      console.log('Loaded destinations:', this.#destinationsModel.getDestinations());
+      console.log('Loaded offers:', this.#offersModel.offers);
+      console.log('Loaded events:', this.#events);
 
-  #getPastEvents() {
-    const now = new Date();
-    return this.#events.filter((event) => new Date(event.dateTo) < now);
-  }
-
-
-  getOffersByType(type, selectedOfferIds = []) {
-    const offerGroup = this.#offers.find((group) => group.type === type);
-    if (!offerGroup) {
-      return []; // Если нет офферов для типа
+      this._notify(UpdateType.INIT);
+    } catch (error) {
+      this.#events = [];
+      this.#isLoading = false;
+      this._notify(UpdateType.INIT);
     }
-
-    return offerGroup.offers.map((offer) => ({
-      ...offer,
-      isChecked: selectedOfferIds.includes(offer.id) // Помечаем выбранные
-    }));
   }
 
   update(updatedEvent) {
@@ -101,7 +76,7 @@ export default class EventsModel extends Observable {
   }
 
   delete(id) {
-    if (!id || typeof id !== 'string') { // Жёсткая проверка
+    if (!id || typeof id !== 'string') {
       return;
     }
     this.#events = this.#events.filter((event) => event.id !== id);
@@ -114,59 +89,58 @@ export default class EventsModel extends Observable {
 
   set(events) {
     this.#events = [...events];
-    this._notify(UpdateType.MAJOR, this.#events); // Для полной перезагрузки данных
+    this._notify(UpdateType.MAJOR, this.#events);
+  }
+
+
+  #getFutureEvents() {
+    const now = new Date();
+    return this.#events.filter((event) => {
+      const start = new Date(event.dateFrom);
+      return start > now;
+    });
+  }
+
+  #getPresentEvents() {
+    const now = new Date();
+    return this.#events.filter((event) => {
+      const start = new Date(event.dateFrom);
+      const end = new Date(event.dateTo);
+      return start <= now && end >= now;
+    });
+  }
+
+  #getPastEvents() {
+    const now = new Date();
+    return this.#events.filter((event) => new Date(event.dateTo) < now);
   }
 
   #adaptToClient(serverEvent) {
-      console.log('--- Adapt start ---');
-  console.log('Raw serverEvent:', serverEvent);
-
     if (!serverEvent || typeof serverEvent !== 'object') {
       throw new Error('Invalid server event data');
     }
 
-      // Проверка цены
-  console.log('base_price:', serverEvent.base_price);
+    const destination = this.#destinationsModel.getDestinationById(serverEvent.destination) || null;
 
-  // Проверка дат
-  console.log('date_from:', serverEvent.date_from);
-  console.log('date_to:', serverEvent.date_to);
-
-  // Проверка favorite
-  console.log('is_favorite:', serverEvent.is_favorite);
-
-  // Проверка destination
-  console.log('destination id from server:', serverEvent.destination);
-  console.log('matched destination object:',
-    this.#destinations.find((dest) => dest.id === serverEvent.destination)
-  );
-
-  // Проверка offers
-  console.log('offers array from server:', serverEvent.offers);
+    const offers = this.#offersModel.getOffersByType(
+      serverEvent.type,
+      serverEvent.offers || []
+    ).filter((offer) => offer.isChecked);
 
     const adaptedEvent = {
       ...serverEvent,
-      // Преобразование полей сервера → клиента
       basePrice: serverEvent['base_price'],
       dateFrom: new Date(serverEvent['date_from']),
       dateTo: new Date(serverEvent['date_to']),
       isFavorite: serverEvent['is_favorite'],
-      // Восстанавливаем полный объект destination
-      destination: this.#destinations.find((dest) => dest.id === serverEvent.destination) || null,
-      // Восстанавливаем полные объекты offers
-      offers: this.getOffersByType(
-        serverEvent.type,
-        serverEvent.offers || []
-      ).filter((offer) => offer.isChecked)
+      destination,
+      offers
     };
 
-    // Удаляем серверные поля (опционально)
     delete adaptedEvent['base_price'];
     delete adaptedEvent['date_from'];
     delete adaptedEvent['date_to'];
     delete adaptedEvent['is_favorite'];
-
-console.log('--- Adapted event ---', adaptedEvent);
 
     return adaptedEvent;
   }
