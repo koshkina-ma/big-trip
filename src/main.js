@@ -7,7 +7,7 @@ import FilterPresenter from './presenter/filter-presenter.js';
 import { SortType, FilterType } from './const.js';
 import EventsApiService from './events-api-service.js';
 
-const AUTHORIZATION = 'Basic hS2sfS58wcl1sa8j';
+const AUTHORIZATION = 'Basic hS2sfS58wcl1sa8j1';
 const END_POINT = 'https://21.objects.htmlacademy.pro/big-trip';
 
 const filtersElement = document.querySelector('.trip-controls__filters');

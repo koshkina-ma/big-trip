@@ -50,7 +50,8 @@ export default class TripPresenter {
       filterModel: this.#filterModel,
       onDataChange: this.#handleViewAction,
       newEventButton: document.querySelector('.trip-main__event-add-btn')
-    });
+    }); //TODO тут как-то сделать отображение кнопки
+    //только после полной загрузки данных с сервера? finally для промиса
   }
 
   init({ sortType = SortType.DAY } = {}) {

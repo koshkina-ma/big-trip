@@ -37,6 +37,32 @@ export default class EventsApiService extends ApiService {
     return parsedResponse;
   }
 
+  async addEvent(event) {
+    console.log('[EventsApiService.addEvent] sending:', event);
+    const response = await this._load({
+      url: 'points',
+      method: Method.POST,
+      body: JSON.stringify(this.#adaptToServer(event)),
+      headers: new Headers({'Content-Type': 'application/json'}),
+    });
+
+    const parsedResponse = await ApiService.parseResponse(response);
+    console.log('[EventsApiService.addEvent] received:', parsedResponse);
+
+    return parsedResponse;
+  }
+
+  async deleteEvent(id) {
+    console.log('[EventsApiService.deleteEvent] sending id:', id);
+    const response = await this._load({
+      url: `points/${id}`,
+      method: Method.DELETE,
+    });
+
+    console.log('[EventsApiService.deleteEvent] response status:', response.status);
+    return response;
+  }
+
   #adaptToServer(event) {
 
     if (!event.dateFrom || !event.dateTo) {
@@ -47,26 +73,24 @@ export default class EventsApiService extends ApiService {
     }
 
     const adaptedEvent = {
-      ...event,
-      'base_price': Number(event.basePrice),
+      'base_price': Math.max(1, Number(event.basePrice)),
       'date_from': event.dateFrom instanceof Date ? event.dateFrom.toISOString() : null,
       'date_to': event.dateTo instanceof Date ? event.dateTo.toISOString() : null,
-      'destination': event.destination?.id || '',
-      'offers': event.offers?.map((offer) => offer.id) || [],
-      'is_favorite': event.isFavorite || false,
+      'destination': String(event.destination.id),
+      'is_favorite': Boolean(event.isFavorite),
+      'offers': event.offers?.map((offer) => String(offer.id)) || [],
+      'type': String(event.type),
     };
 
-    delete adaptedEvent.basePrice;
-    delete adaptedEvent.dateFrom;
-    delete adaptedEvent.dateTo;
-    delete adaptedEvent.isFavorite;
+    if (event.dateTo <= event.dateFrom) {
+      adaptedEvent['date_to'] = new Date(event.dateFrom.getTime() + 60 * 1000).toISOString();
+    }
 
     console.log('[AdaptToServer] Input:', event);
     console.log('[AdaptToServer] Output:', adaptedEvent);
 
     return adaptedEvent;
   }
-
 }
 
 //https://21.objects.htmlacademy.pro/big-trip

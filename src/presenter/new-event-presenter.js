@@ -25,6 +25,7 @@ export default class NewEventPresenter {
 
   init() {
     this.#newEventButton.addEventListener('click', this.#handleNewEventButtonClick);
+    //TODO или тут не отрисовывать кнопку New event?
   }
 
   #handleNewEventButtonClick = () => {
@@ -72,7 +73,7 @@ export default class NewEventPresenter {
     this.#handleDataChange(
       UserAction.ADD_EVENT,
       UpdateType.MINOR,
-      { ...event, id: crypto.randomUUID() }
+      event
     );
     this.destroyForm();
   };

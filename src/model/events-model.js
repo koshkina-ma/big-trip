@@ -2,10 +2,10 @@ import Observable from '../framework/observable.js';
 import { FilterType, UpdateType } from '../const.js';
 
 export default class EventsModel extends Observable {
+  #events = [];
   #eventsApiService = null;
   #destinationsModel = null;
   #offersModel = null;
-  #events = [];
   #isLoading = true;
 
   constructor({ eventsApiService, destinationsModel, offersModel }) {
@@ -56,31 +56,70 @@ export default class EventsModel extends Observable {
     }
   }
 
-  update(updatedEvent) {
+  async update(updatedEvent) {
     const index = this.#events.findIndex((event) => event.id === updatedEvent.id);
     if (index === -1) {
       throw new Error('Event not found');
     }
+    try {
+      console.log('[EventsModel.update] sending:', updatedEvent);
+      const response = await this.#eventsApiService.updateEvent(updatedEvent);
+      console.log('[EventsModel.update] received:', response);
+      const updatedEventFromServer = this.#adaptToClient(response);
 
-    this.#events = [
-      ...this.#events.slice(0, index),
-      updatedEvent,
-      ...this.#events.slice(index + 1)
-    ];
-    this._notify(UpdateType.MINOR, updatedEvent);
+      this.#events = [
+        ...this.#events.slice(0, index),
+        updatedEventFromServer,
+        ...this.#events.slice(index + 1)
+      ];
+      this._notify(UpdateType.MINOR, updatedEventFromServer);
+    } catch(err) {
+      throw new Error(`Can't update event: ${err.message}`);
+    }
   }
 
-  add(event) {
-    this.#events = [...this.#events, event];
-    this._notify(UpdateType.MINOR, event);
+  async add(newEvent) {
+    console.log('[EventsModel.add] sending:', newEvent);
+    try {
+      const response = await this.#eventsApiService.addEvent(newEvent);
+      console.log('[EventsModel.add] received:', response);
+      const createdEvent = this.#adaptToClient(response);
+      this.#events = [...this.#events, createdEvent];
+
+      this._notify(UpdateType.MINOR, createdEvent);
+    } catch(err) {
+      console.error('[EventsModel.add] error:', err);
+      throw new Error('Can\'t add event');
+    }
   }
 
-  delete(id) {
-    if (!id || typeof id !== 'string') {
+  async delete(eventId) {
+    if (!eventId || typeof eventId !== 'string') {
+      console.warn('[EventsModel.delete] invalid id:', eventId);
       return;
     }
-    this.#events = this.#events.filter((event) => event.id !== id);
-    this._notify(UpdateType.MINOR);
+
+    console.log('[EventsModel.delete] sending id:', eventId);
+
+    try {
+      await this.#eventsApiService.deleteEvent(eventId);
+      console.log('[EventsModel.delete] delete successful');
+
+
+      const index = this.#events.findIndex((event) => event.id === eventId);
+      if (index !== -1) {
+        this.#events = [
+          ...this.#events.slice(0, index),
+          ...this.#events.slice(index + 1)
+        ];
+        this._notify(UpdateType.MINOR);
+      } else {
+        console.warn('[EventsModel.delete] event not found in local state:', eventId);
+      }
+    } catch (err) {
+      console.error('[EventsModel.delete] error:', err);
+      throw new Error('Can\'t delete event');
+    }
   }
 
   findById(id) {

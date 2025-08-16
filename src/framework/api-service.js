@@ -34,7 +34,7 @@ export default class ApiService {
     );
 
     try {
-      ApiService.checkStatus(response);
+      await ApiService.checkStatus(response);
       return response;
     } catch (err) {
       ApiService.catchError(err);
@@ -54,9 +54,23 @@ export default class ApiService {
    * Метод для проверки ответа
    * @param {Response} response Объект ответа
    */
-  static checkStatus(response) {
+  //TODO заменить метод на оригинальный static checkStatus(response) {
+  //   if (!response.ok) {
+  //     throw new Error(`${response.status}: ${response.statusText}`);
+  //   }
+  // }
+
+  static async checkStatus(response) {
     if (!response.ok) {
-      throw new Error(`${response.status}: ${response.statusText}`);
+      let errorMessage = `${response.status}: ${response.statusText}`;
+      try {
+        const errorBody = await response.json(); // читаем JSON с ошибкой
+        console.error('[API ERROR BODY]', errorBody);
+        errorMessage += `\n${JSON.stringify(errorBody, null, 2)}`;
+      } catch {
+      // если тело не JSON, оставляем только статус
+      }
+      throw new Error(errorMessage);
     }
   }
 

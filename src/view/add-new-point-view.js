@@ -206,8 +206,8 @@ export default class AddNewPointView extends AbstractStatefulView {
 
     return {
       type: DEFAULT_EVENT_TYPE,
-      destination: defaultDestination, // Гарантированно будет объект с name
-      offers: this.#offers.map((offer) => ({ ...offer, isChecked: false })), // Добавляем флаги
+      destination: defaultDestination,
+      offers: this.#offers.map((offer) => ({ ...offer, isChecked: false })),
       dateFrom: new Date(),
       dateTo: new Date(),
       basePrice: 0,

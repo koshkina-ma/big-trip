@@ -1,7 +1,7 @@
-//TODO весь файл на удаление
+// //TODO весь файл на удаление
 
-function getRandomArrayElement(items) {
-  return items[Math.floor(Math.random() * items.length)];
-}
+// function getRandomArrayElement(items) {
+//   return items[Math.floor(Math.random() * items.length)];
+// }
 
-export { getRandomArrayElement};
+// export { getRandomArrayElement};
