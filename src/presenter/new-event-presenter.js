@@ -25,7 +25,6 @@ export default class NewEventPresenter {
 
   init() {
     this.#newEventButton.addEventListener('click', this.#handleNewEventButtonClick);
-    //TODO или тут не отрисовывать кнопку New event?
   }
 
   #handleNewEventButtonClick = () => {
@@ -60,13 +59,32 @@ export default class NewEventPresenter {
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   }
 
-  // #getDefaultOffers() {
-  //   return this.#eventsModel.getOffersByType(DEFAULT_EVENT_TYPE, []);
-  // }
+
+  setSaving() {//TODO метод из учебного проекта, нужен ли он тут вообще?, адаптировать под мой
+    if (!this.#addFormComponent) {
+      return;
+    }
+    console.log('🔄 setSaving: блокируем форму, отправка на сервер...');
+    this.#addFormComponent.updateElement({
+      isDisabled: true,
+      isSaving: true,
+    });
+  }
+
+  setAborting() {//TODO метод из учебного проекта, адаптировать под мой, в какие места еще добавить? в создание и редактирование?
+    const resetFormState = () => {
+      this.#addFormComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+      });
+    };
+
+    this.#addFormComponent.shake(resetFormState);
+  }
 
   #handleFormSubmit = (event) => {
     console.log('Received form data:', {
-      hasDestination: !!event.destination, // Проверить перед обработкой
+      hasDestination: !!event.destination,
       rawData: event
     });
 

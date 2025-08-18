@@ -4,7 +4,7 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import { DEFAULT_EVENT_TYPE } from '../const.js';
 
-function createAddNewPointTemplate(state, destinations) {
+function createAddNewPointTemplate(state, destinations) {//TODO добавить флаги про isDisabled, isSaving, isDeleting?
   const {
     type = DEFAULT_EVENT_TYPE,
     destination,
@@ -33,11 +33,11 @@ function createAddNewPointTemplate(state, destinations) {
   const photosMarkup = pictures.map((pic) => `
     <img class="event__photo" src="${pic.src}" alt="${pic.description}">
   `).join('');
-
+//TODO тут убрала fieldset на всю форму, проверить disable для кнопок
   return (/*html*/
     `<li class="trip-events__item">
       <form class="event event--edit" action="#" method="post">
-        <header class="event__header">
+              <header class="event__header">
           <!-- Type selection -->
           <div class="event__type-wrapper">
             <label class="event__type event__type-btn" for="event-type-toggle-new">
@@ -119,7 +119,9 @@ function createAddNewPointTemplate(state, destinations) {
           </div>
 
           <!-- Buttons -->
-          <button class="event__save-btn btn btn--blue" type="submit">Save</button>
+          <button class="event__save-btn btn btn--blue" type="submit">
+          ${state.isSaving ? 'Saving...' : 'Save'}
+          </button>
           <button class="event__reset-btn" type="button">Cancel</button>
         </header>
 
@@ -150,7 +152,7 @@ function createAddNewPointTemplate(state, destinations) {
           ` : ''}
         </section>
         ` : ''}
-      </form>
+        </form>
     </li>`
   );
 }
@@ -181,21 +183,6 @@ export default class AddNewPointView extends AbstractStatefulView {
     this.#setFlatpickr();
     this._restoreHandlers();
   }
-
-  // #getDefaultState() {
-  //   const defaultDestination = this.#destinations.length > 0
-  //     ? this.#destinations[0]
-  //     : { name: '', description: '', pictures: [] };
-
-  //   return {
-  //     type: DEFAULT_EVENT_TYPE,
-  //     destination: defaultDestination,
-  //     offers: this.#offers,
-  //     dateFrom: new Date(),
-  //     dateTo: new Date(),
-  //     basePrice: 0
-  //   };
-  // }
 
   #getDefaultState() {
     const defaultDestination = this.#destinations[0] || {
@@ -273,6 +260,7 @@ export default class AddNewPointView extends AbstractStatefulView {
       destination: this._state.destination, // Проверить наличие
       hasDestination: !!this._state.destination
     });
+
     const eventData = AddNewPointView.parseStateToPoint(this._state);
     this.#handleFormSubmit(eventData);
   };

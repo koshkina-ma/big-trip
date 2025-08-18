@@ -2,7 +2,13 @@ import TripInfoPresenter from './trip-info-presenter.js';
 import TripSortPresenter from './trip-sort-presenter.js';
 import TripEventsPresenter from './trip-events-presenter.js';
 import NewEventPresenter from './new-event-presenter.js';
+import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
 import { SortType, FilterType, UpdateType, UserAction } from '../const.js';
+
+const TimeLimit = {
+  LOWER_LIMIT: 350,
+  UPPER_LIMIT: 1000,
+};
 
 export default class TripPresenter {
   #eventsContainer = null;
@@ -17,6 +23,11 @@ export default class TripPresenter {
   #tripSortPresenter = null;
   #tripEventsPresenter = null;
   #newEventPresenter = null;
+
+  #uiBlocker = new UiBlocker({
+    lowerLimit: TimeLimit.LOWER_LIMIT,
+    upperLimit: TimeLimit.UPPER_LIMIT
+  });
 
   constructor({ eventsContainer, eventsModel, filterModel }) {
     this.#eventsContainer = eventsContainer;
@@ -50,8 +61,7 @@ export default class TripPresenter {
       filterModel: this.#filterModel,
       onDataChange: this.#handleViewAction,
       newEventButton: document.querySelector('.trip-main__event-add-btn')
-    }); //TODO тут как-то сделать отображение кнопки
-    //только после полной загрузки данных с сервера? finally для промиса
+    });
   }
 
   init({ sortType = SortType.DAY } = {}) {
@@ -151,18 +161,36 @@ export default class TripPresenter {
     }
   }
 
-  #handleViewAction = (actionType, updateType, update) => {
+  #handleViewAction = async (actionType, updateType, update) => {//TODO добавляем покачивание при ошибке
+    this.#uiBlocker.block();
+
     switch (actionType) {
       case UserAction.UPDATE_EVENT:
-        this.#eventsModel.update(update);
+        this.#tripEventsPresenter.setSaving();
+        try {//TODO блок кода из учебного проекта, адаптировать под мой
+          await this.#eventsModel.update(updateType, update);
+        } catch(err) {
+          this.#tripEventsPresenter.setAborting();
+        }
         break;
       case UserAction.ADD_EVENT:
-        this.#eventsModel.add(update);
+        this.#newEventPresenter.setSaving();
+        try {
+          await this.#eventsModel.add(update);
+        } catch(err) {
+          this.#newEventPresenter.setAborting();
+        }
         break;
       case UserAction.DELETE_EVENT:
-        this.#eventsModel.delete(update);
+        this.#tripEventsPresenter.setDeleting();
+        try {
+          await this.#eventsModel.delete(update);
+        } catch(err) {
+          this.#tripEventsPresenter.setAborting();
+        }
         break;
     }
+    this.#uiBlocker.unblock();
   };
 
   #handleModeChange = () => {

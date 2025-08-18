@@ -5,7 +5,7 @@ import 'flatpickr/dist/flatpickr.min.css';
 import { UserAction } from '../const.js';
 
 
-function createEditPointTemplate(state, destinations) {
+function createEditPointTemplate(state, destinations) { //TODO добавить флаги про isDisabled, isSaving, isDeleting
   const {
     type,
     destination,
@@ -44,11 +44,11 @@ function createEditPointTemplate(state, destinations) {
 
   const hasDescription = destinationDescription && destinationDescription.trim() !== '';
   const shouldRenderDetails = hasOffers || hasDescription || hasPhotos;
-
+//TODO тут убрала fieldset на всю форму, проверить disable для кнопок
   return (/*html*/`
     <li class="trip-events__item">
       <form class="event event--edit" action="#" method="post">
-        <header class="event__header">
+          <header class="event__header">
           <div class="event__type-wrapper">
             <label class="event__type event__type-btn" for="event-type-toggle-${id}">
               <span class="visually-hidden">Choose event type</span>
@@ -132,8 +132,12 @@ function createEditPointTemplate(state, destinations) {
             >
           </div>
 
-          <button class="event__save-btn btn btn--blue" type="submit">Save</button>
-          <button class="event__reset-btn" type="button">Delete</button>
+          <button class="event__save-btn btn btn--blue" type="submit" ${state.isSaving ? 'disabled' : ''}>
+            ${state.isSaving ? 'Saving...' : 'Save'}
+          </button>
+          <button class="event__reset-btn" type="button" ${state.isDeleting ? 'disabled' : ''}>
+            ${state.isDeleting ? 'Deleting...' : 'Delete'}
+          </button>
           <button class="event__rollup-btn" type="button">
             <span class="visually-hidden">Open event</span>
           </button>
@@ -167,7 +171,7 @@ function createEditPointTemplate(state, destinations) {
           ` : ''}
         </section>
         ` : ''}
-      </form>
+        </form>
     </li>
   `);
 }
@@ -190,12 +194,21 @@ export default class EditPointView extends AbstractStatefulView {
     this._restoreHandlers();
   }
 
-  static parseEventToState(event) {
-    return {...event};
+  static parseEventToState(event) {//TODO здесь добавляю флаги
+    return {...event,
+      isDisabled: false,
+      isSaving: false,
+      isDeleting: false,
+    };
   }
 
-  static parseStateToEvent(state) {
-    return {...state};
+  static parseStateToEvent(state) {//TODO здесь удаляю флаги
+    const event = {...state};
+
+    delete event.isDisabled;
+    delete event.isSaving;
+    delete event.isDeleting;
+    return event;
   }
 
   get template() {

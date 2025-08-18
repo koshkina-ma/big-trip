@@ -92,9 +92,9 @@ export default class TripEventsPresenter {
       this.#events[index] = updatedEvent;
     }
 
-    if (this.#editForm) {
-      this.#closeEditForm();
-    }
+    // if (this.#editForm) {
+    //   this.#closeEditForm();
+    // }
 
     const presenter = this.#eventPresenters.get(updatedEvent.id);
     if (presenter) {
@@ -159,9 +159,12 @@ export default class TripEventsPresenter {
       });
     });
 
-    formComponent.setDeleteClickHandler((pointId) => {
-      this.#onDataChange(UserAction.DELETE_EVENT, UpdateType.MINOR, pointId);
-      this.#closeEditForm();
+    formComponent.setDeleteClickHandler((id) => {//TODO удалить таймаут
+      this.setDeleting();
+      setTimeout(() => {
+        this.#onDataChange(UserAction.DELETE_EVENT, UpdateType.MINOR, id);
+      }, 2000);
+      // this.#closeEditForm();
     });
 
     formComponent.setTypeChangeHandler((type) => {
@@ -195,6 +198,42 @@ export default class TripEventsPresenter {
 
     this.#editForm = null;
     this.#eventCard = null;
+  }
+
+  setSaving() {//TODO метод из учебного проекта, адаптировать под мой
+    if (!this.#editForm) {
+      return;
+    }
+    console.log('🔄 setSaving: блокируем форму редактирования...');
+
+    this.#editForm.updateElement({
+      isDisabled: true,
+      isSaving: true,
+    });
+  }
+
+  setDeleting() {//TODO метод из учебного проекта, адаптировать под мой
+    if (!this.#editForm) {
+      return;
+    }
+
+    console.log('🔄 setDeleting: блокируем форму редактирования, идет удаление...');
+    this.#editForm.updateElement({
+      isDisabled: true,
+      isDeleting: true,
+    });
+  }
+
+  setAborting() {//TODO метод из учебного проекта, адаптировать под мой, в какие места еще добавить? в создание и редактирование?
+    const resetFormState = () => {
+      this.#editForm.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false,
+      });
+    };
+
+    this.#editForm.shake(resetFormState);
   }
 
   #handleEscKeyDown = (evt) => {
