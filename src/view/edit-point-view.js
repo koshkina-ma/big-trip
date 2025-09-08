@@ -2,7 +2,7 @@ import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { getEditPointFormattedDate } from '../utils/utils.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-import { UserAction } from '../const.js';
+import { UserAction, UpdateType } from '../const.js';
 
 
 function createEditPointTemplate(state, destinations) { //TODO добавить флаги про isDisabled, isSaving, isDeleting
@@ -44,7 +44,7 @@ function createEditPointTemplate(state, destinations) { //TODO добавить 
 
   const hasDescription = destinationDescription && destinationDescription.trim() !== '';
   const shouldRenderDetails = hasOffers || hasDescription || hasPhotos;
-//TODO тут убрала fieldset на всю форму, проверить disable для кнопок
+  //TODO тут убрала fieldset на всю форму, проверить disable для кнопок
   return (/*html*/`
     <li class="trip-events__item">
       <form class="event event--edit" action="#" method="post">
@@ -208,6 +208,9 @@ export default class EditPointView extends AbstractStatefulView {
     delete event.isDisabled;
     delete event.isSaving;
     delete event.isDeleting;
+
+    event.offers = event.offers || [];
+
     return event;
   }
 
@@ -345,7 +348,19 @@ export default class EditPointView extends AbstractStatefulView {
 
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
-    this.#handleFormSubmit?.(UserAction.UPDATE_EVENT, EditPointView.parseStateToEvent(this._state));
+    const parsedEvent = EditPointView.parseStateToEvent(this._state);
+
+console.log('[EditPointView] submit handler →', {
+    action: UserAction.UPDATE_EVENT,
+    updateType: UpdateType.MINOR,
+    parsedEvent
+  });
+
+    this.#handleFormSubmit?.(
+      UserAction.UPDATE_EVENT,
+      UpdateType.MINOR, //TODO этот аргумент потом в массиве буквами становится
+      parsedEvent
+    );
   };
 
   #deleteClickHandler = (evt) => {

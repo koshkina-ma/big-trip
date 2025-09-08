@@ -32,6 +32,14 @@ export default class FilterPresenter {
     replace(this.#filterComponent, prevFilterComponent);
   }
 
+  updateFilterAvailability(availability) {//TODO фильтры
+    if (!this.#filterComponent) {
+      return;
+    }
+
+    this.#filterComponent.updateAvailability(availability);
+  }
+
   #handleFilterChange = (filterType) => {
     if (this.#filterModel.filter === filterType) {
       return;

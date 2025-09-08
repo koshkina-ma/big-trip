@@ -17,6 +17,7 @@ export default class TripPresenter {
   #tripInfoContainer = null;
   #eventsModel = null;
   #filterModel = null;
+  #filterPresenter = null; //TODO фильтры
 
   #currentSortType = SortType.DAY;
   #tripInfoPresenter = null;
@@ -29,13 +30,15 @@ export default class TripPresenter {
     upperLimit: TimeLimit.UPPER_LIMIT
   });
 
-  constructor({ eventsContainer, eventsModel, filterModel }) {
+  constructor({ eventsContainer, eventsModel, filterModel, filterPresenter }) {
     this.#eventsContainer = eventsContainer;
     this.#eventsModel = eventsModel;
     this.#filterModel = filterModel;
+    this.#filterPresenter = filterPresenter;
 
     this.#eventsModel.addObserver(this.#handleModelEvent);
     this.#filterModel.addObserver(this.#handleModelEvent);
+
 
     this.#sortContainer = this.#eventsContainer.querySelector('.trip-events__sort-container');
     this.#listContainer = this.#eventsContainer.querySelector('.trip-events__list');
@@ -76,6 +79,15 @@ export default class TripPresenter {
       const events = this.#getFilteredSortedEvents();
       this.#renderTrip(events);
     }
+  }
+
+  _computeFilterAvailability() {//TODO фильтры
+    return {
+      [FilterType.EVERYTHING]: this.#eventsModel.getEvents(FilterType.EVERYTHING).length > 0,
+      [FilterType.PAST]: this.#eventsModel.getEvents(FilterType.PAST).length > 0,
+      [FilterType.PRESENT]: this.#eventsModel.getEvents(FilterType.PRESENT).length > 0,
+      [FilterType.FUTURE]: this.#eventsModel.getEvents(FilterType.FUTURE).length > 0,
+    };
   }
 
   #getFilteredSortedEvents() {
@@ -150,6 +162,12 @@ export default class TripPresenter {
         this.init();
         break;
     }
+
+    if (this.#filterPresenter) {//TODO фильтры
+      const availability = this._computeFilterAvailability(); // метод, который считает, есть ли события для фильтров
+      this.#filterPresenter.updateFilterAvailability(availability);
+    }
+
   };
 
   #resetSortToDay() {
@@ -161,37 +179,52 @@ export default class TripPresenter {
     }
   }
 
-  #handleViewAction = async (actionType, updateType, update) => {//TODO добавляем покачивание при ошибке
+  #handleViewAction = async (actionType, updateType, update) => {
+    console.log('[TripPresenter.#handleViewAction] args: ', { actionType, updateType, update });
+
     this.#uiBlocker.block();
 
     switch (actionType) {
       case UserAction.UPDATE_EVENT:
         this.#tripEventsPresenter.setSaving();
-        try {//TODO блок кода из учебного проекта, адаптировать под мой
-          await this.#eventsModel.update(updateType, update);
+        console.log('🔄 TripPresenter: calling update', update);
+
+        try {
+          await this.#eventsModel.update(update);
+          console.log('✅ TripPresenter: update successful', update);
         } catch(err) {
+          console.error('❌ TripPresenter: update error', err, update);
           this.#tripEventsPresenter.setAborting();
         }
         break;
+
       case UserAction.ADD_EVENT:
         this.#newEventPresenter.setSaving();
         try {
           await this.#eventsModel.add(update);
+          console.log('✅ TripPresenter: add successful', update);
+          this.#newEventPresenter.destroyForm();
         } catch(err) {
+          console.error('❌ TripPresenter: add error', err, update);
           this.#newEventPresenter.setAborting();
         }
         break;
+
       case UserAction.DELETE_EVENT:
         this.#tripEventsPresenter.setDeleting();
         try {
           await this.#eventsModel.delete(update);
+          console.log('✅ TripPresenter: delete successful', update);
         } catch(err) {
+          console.error('❌ TripPresenter: delete error', err, update);
           this.#tripEventsPresenter.setAborting();
         }
         break;
     }
+
     this.#uiBlocker.unblock();
   };
+
 
   #handleModeChange = () => {
     this.#tripEventsPresenter.resetView();

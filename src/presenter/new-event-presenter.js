@@ -72,6 +72,10 @@ export default class NewEventPresenter {
   }
 
   setAborting() {//TODO метод из учебного проекта, адаптировать под мой, в какие места еще добавить? в создание и редактирование?
+    if (!this.#addFormComponent) {
+      return; // форма уже удалена, ничего не делаем
+    }
+
     const resetFormState = () => {
       this.#addFormComponent.updateElement({
         isDisabled: false,
@@ -88,12 +92,14 @@ export default class NewEventPresenter {
       rawData: event
     });
 
+    this.setSaving();
+
     this.#handleDataChange(
       UserAction.ADD_EVENT,
       UpdateType.MINOR,
       event
     );
-    this.destroyForm();
+
   };
 
   #handleCancelClick = () => {

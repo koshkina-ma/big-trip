@@ -93,4 +93,3 @@ export default class EventsApiService extends ApiService {
   }
 }
 
-//https://21.objects.htmlacademy.pro/big-trip

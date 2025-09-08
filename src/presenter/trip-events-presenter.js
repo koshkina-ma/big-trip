@@ -92,10 +92,6 @@ export default class TripEventsPresenter {
       this.#events[index] = updatedEvent;
     }
 
-    // if (this.#editForm) {
-    //   this.#closeEditForm();
-    // }
-
     const presenter = this.#eventPresenters.get(updatedEvent.id);
     if (presenter) {
       const newEventComponent = new TripEventItemView({
@@ -116,6 +112,10 @@ export default class TripEventsPresenter {
         ...presenter,
         eventComponent: newEventComponent
       });
+
+      if (this.#editForm && this.#editForm.event.id === updatedEvent.id) {
+        this.#closeEditForm();
+      }
     }
   }
 
@@ -134,29 +134,46 @@ export default class TripEventsPresenter {
     }
 
     const eventData = this.#eventsModel.findById(eventId);
+    if (!eventData) {
+      return;
+    }
+
     const formComponent = new EditPointView({
       event: {
         ...structuredClone(eventData),
-        offers: this.#eventsModel.getOffersByType(
+        offers: Array.isArray(eventData.offers) ? this.#eventsModel.getOffersByType(
           eventData.type,
-          eventData.offers.map((o) => o.id)
-        )
+          (eventData.offers || []).map((o) => o.id)
+        ) : []
       },
       eventsModel: this.#eventsModel
     });
 
-    formComponent.setFormSubmitHandler((actionType, updatedEvent) => {
+    formComponent.setFormSubmitHandler((actionType, updateType, updatedEvent) => {
+        console.log('[TripEventsPresenter] got submit →', {
+    actionType,
+    updateType,
+    updatedEvent
+  });
+
+      if (!updatedEvent) {
+         console.warn('[TripEventsPresenter] updatedEvent is undefined!');
+        return;
+      }
       console.log('[Presenter] submit handler', actionType, updatedEvent);
-      const selectedOffers = updatedEvent.offers
-        .filter((offer) => offer.isChecked)
-        .map(({ id, title, price }) => ({ id, title, price }));
+
+      const selectedOffers = Array.isArray(updatedEvent.offers)
+        ? updatedEvent.offers
+          .filter((offer) => offer.isChecked)
+          .map(({ id, title, price }) => ({ id, title, price }))
+        : [];
 
       console.log('[Presenter] SUBMIT form', actionType, updatedEvent);
 
-      this.#onDataChange(actionType, UpdateType.MINOR, {
-        ...updatedEvent,
-        offers: selectedOffers
-      });
+      const finalEvent = { ...updatedEvent, offers: selectedOffers };
+
+  console.log('[TripEventsPresenter] final event to presenter →', finalEvent);
+      this.#onDataChange(actionType, updateType, finalEvent);
     });
 
     formComponent.setDeleteClickHandler((id) => {//TODO удалить таймаут
@@ -167,8 +184,9 @@ export default class TripEventsPresenter {
       // this.#closeEditForm();
     });
 
+
     formComponent.setTypeChangeHandler((type) => {
-      const selectedIds = this.#eventsModel.findById(eventId).offers;
+      const selectedIds = this.#eventsModel.findById(eventId)?.offers ?? [];
       const currentOffers = this.#eventsModel.getOffersByType(type, selectedIds);
       formComponent.updateElement({ offers: currentOffers, type });
     });

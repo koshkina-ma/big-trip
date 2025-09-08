@@ -10,7 +10,7 @@ import EventsApiService from './events-api-service.js';
 const AUTHORIZATION = 'Basic hS2sfS58wcl1sa8j1';
 const END_POINT = 'https://21.objects.htmlacademy.pro/big-trip';
 
-const filtersElement = document.querySelector('.trip-controls__filters');
+const filtersContainer = document.querySelector('.trip-controls__filters');
 const siteMainElement = document.querySelector('.trip-events');
 
 const filters = Object.entries(FilterType).map(([key, type]) => ({
@@ -37,13 +37,12 @@ const tripPresenter = new TripPresenter({
   filterModel: filterModel
 });
 
-const filterPresenter = new FilterPresenter({
-  container: filtersElement,
+const filterPresenter = new FilterPresenter({ //TODO фильтры
+  container: filtersContainer,
   filters: filters,
   filterModel: filterModel,
   onFilterChange: (filterType) => {
     filterModel.setFilter(filterType);
-    tripPresenter.init({ sortType: SortType.DAY });
   }
 });
 

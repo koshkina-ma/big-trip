@@ -39,6 +39,13 @@ export default class ListFilterView extends AbstractView {
     return createListFilterTemplate(this.#filters, this.#currentFilter);
   }
 
+  updateAvailability(availability) {//TODO фильтры
+    this.element.querySelectorAll('input[name="trip-filter"]').forEach((input) => {
+      const type = input.value;
+      input.disabled = !availability[type];
+    });
+  }
+
   #filterChangeHandler = (evt) => {
     evt.preventDefault();
     this.#onFilterChange(evt.target.value);
