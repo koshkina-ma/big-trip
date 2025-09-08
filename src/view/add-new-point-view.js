@@ -33,7 +33,7 @@ function createAddNewPointTemplate(state, destinations) {//TODO добавить
   const photosMarkup = pictures.map((pic) => `
     <img class="event__photo" src="${pic.src}" alt="${pic.description}">
   `).join('');
-//TODO тут убрала fieldset на всю форму, проверить disable для кнопок
+  //TODO тут убрала fieldset на всю форму, проверить disable для кнопок
   return (/*html*/
     `<li class="trip-events__item">
       <form class="event event--edit" action="#" method="post">
@@ -302,27 +302,50 @@ export default class AddNewPointView extends AbstractStatefulView {
   };
 
   #setFlatpickr() {
-    const startDateElement = this.element.querySelector('#event-start-time-new');
-    const endDateElement = this.element.querySelector('#event-end-time-new');
+  // Чистим предыдущие инстансы, если вдруг они были
+    if (this.#flatpickrStart) {
+      this.#flatpickrStart.destroy();
+      this.#flatpickrStart = null;
+    }
+    if (this.#flatpickrEnd) {
+      this.#flatpickrEnd.destroy();
+      this.#flatpickrEnd = null;
+    }
 
-    this.#flatpickrStart = flatpickr(startDateElement, {
+    const { dateFrom, dateTo } = this._state;
+    const startInput = this.element.querySelector('#event-start-time-new');
+    const endInput = this.element.querySelector('#event-end-time-new');
+
+    // 1. Сначала инициализируем конечную дату
+    this.#flatpickrEnd = flatpickr(endInput, {
       enableTime: true,
       dateFormat: 'd/m/y H:i',
-      defaultDate: this._state.dateFrom,
-      onChange: (dates) => {
-        this._setState({
-          dateFrom: dates[0]
-        });
-      }
+      defaultDate: dateTo,
+      minDate: dateFrom,
+      onChange: (dates) => this._setState({ dateTo: dates[0] })
     });
 
-    this.#flatpickrEnd = flatpickr(endDateElement, {
+    // 2. Потом начальную дату
+    this.#flatpickrStart = flatpickr(startInput, {
       enableTime: true,
       dateFormat: 'd/m/y H:i',
-      defaultDate: this._state.dateTo,
+      defaultDate: dateFrom,
       onChange: (dates) => {
+        const newStart = dates[0];
+        const currentEnd = this.#flatpickrEnd.selectedDates[0] || this._state.dateTo;
+
+        // Если дата начала >= даты конца → дата конца = дата начала
         this._setState({
-          dateTo: dates[0]
+          dateFrom: newStart,
+          dateTo: newStart >= currentEnd ? newStart : currentEnd
+        });
+
+        // Принудительно обновляем minDate и значение конца
+        requestAnimationFrame(() => {
+          this.#flatpickrEnd.set('minDate', newStart);
+          if (newStart >= currentEnd) {
+            this.#flatpickrEnd.setDate(newStart);
+          }
         });
       }
     });
