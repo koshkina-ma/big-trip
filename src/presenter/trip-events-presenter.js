@@ -120,13 +120,29 @@ export default class TripEventsPresenter {
   }
 
   #handleFavoriteToggle = (event) => {
-    const updatedEvent = { ...event, isFavorite: !event.isFavorite };
+    console.log('[TripEventsPresenter] #handleFavoriteToggle called. event.id:', event.id, 'current isFavorite:', event.isFavorite);
+    //TODO бьюсь с избранным
+    // const updatedEvent = { ...event, isFavorite: !event.isFavorite };
+    //  console.log('[TripEventsPresenter] sending updatedEvent to presenter:', updatedEvent);
     this.#onDataChange(
       UserAction.UPDATE_EVENT,
       UpdateType.PATCH,
-      updatedEvent
+      event
+      //updatedEvent
     );
   };
+
+  updateFavorite(eventId, isFavorite) {
+    const presenter = this.#eventPresenters.get(eventId);
+    console.log('[TripEventsPresenter] updateFavorite called for eventId:', eventId, 'isFavorite:', isFavorite, 'presenter exists:', !!presenter);
+
+    if (!presenter) {
+      return;
+    }
+
+    presenter.eventComponent.updateFavorite(isFavorite);
+  }
+
 
   #openEditForm(eventId, eventComponent) {
     if (this.#editForm) {
@@ -150,14 +166,14 @@ export default class TripEventsPresenter {
     });
 
     formComponent.setFormSubmitHandler((actionType, updateType, updatedEvent) => {
-        console.log('[TripEventsPresenter] got submit →', {
-    actionType,
-    updateType,
-    updatedEvent
-  });
+      console.log('[TripEventsPresenter] got submit →', {
+        actionType,
+        updateType,
+        updatedEvent
+      });
 
       if (!updatedEvent) {
-         console.warn('[TripEventsPresenter] updatedEvent is undefined!');
+        console.warn('[TripEventsPresenter] updatedEvent is undefined!');
         return;
       }
       console.log('[Presenter] submit handler', actionType, updatedEvent);
@@ -172,7 +188,7 @@ export default class TripEventsPresenter {
 
       const finalEvent = { ...updatedEvent, offers: selectedOffers };
 
-  console.log('[TripEventsPresenter] final event to presenter →', finalEvent);
+      console.log('[TripEventsPresenter] final event to presenter →', finalEvent);
       this.#onDataChange(actionType, updateType, finalEvent);
     });
 
@@ -243,6 +259,9 @@ export default class TripEventsPresenter {
   }
 
   setAborting() {//TODO метод из учебного проекта, адаптировать под мой, в какие места еще добавить? в создание и редактирование?
+    if (!this.#editForm) {
+      return;
+    }
     const resetFormState = () => {
       this.#editForm.updateElement({
         isDisabled: false,
@@ -253,6 +272,16 @@ export default class TripEventsPresenter {
 
     this.#editForm.shake(resetFormState);
   }
+
+  shakeEventCard(eventId) {
+    const presenter = this.#eventPresenters.get(eventId);
+    console.log('[TripEventsPresenter] shakeEventCard called for eventId:', eventId, 'presenter exists:', !!presenter);
+    if (presenter?.eventComponent?.shake) {
+      console.log('[TripEventsPresenter] actually shaking card');
+      presenter.eventComponent.shake();
+    }
+  }
+
 
   #handleEscKeyDown = (evt) => {
     if ((evt.key === 'Escape' || evt.key === 'Esc') && this.#editForm) {

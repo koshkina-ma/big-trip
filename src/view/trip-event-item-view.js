@@ -78,10 +78,23 @@ export default class TripEventItemView extends AbstractView {
     this.#handleRollupClick(evt);
   };
 
-  #favoriteClickHandler = (evt) => {
-    evt.preventDefault();
-    if (this.#handleFavoriteClick) {
-      this.#handleFavoriteClick(this.#event);
+#favoriteClickHandler = (evt) => {
+  evt.preventDefault();
+  console.log('[TripEventItemView] favorite clicked. current isFavorite:', this.#event.isFavorite);
+  if (this.#handleFavoriteClick) {
+    this.#handleFavoriteClick(this.#event);
+  }
+};
+
+
+  updateFavorite(isFavorite) {
+    this.#event.isFavorite = isFavorite;
+    const btn = this.element.querySelector('.event__favorite-btn');
+    if (isFavorite) {
+      btn.classList.add('event__favorite-btn--active');
+    } else {
+      btn.classList.remove('event__favorite-btn--active');
     }
-  };
+  }
+
 }

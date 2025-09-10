@@ -186,17 +186,44 @@ export default class TripPresenter {
 
     switch (actionType) {
       case UserAction.UPDATE_EVENT:
-        this.#tripEventsPresenter.setSaving();
-        console.log('🔄 TripPresenter: calling update', update);
+        console.log('[TripPresenter] UPDATE_EVENT called. editForm:', !!this.#tripEventsPresenter.editForm, 'update:', update);
+
+        if (this.#tripEventsPresenter.editForm) {
+          console.log('[TripPresenter] setSaving()');
+          this.#tripEventsPresenter.setSaving();
+        }
 
         try {
-          await this.#eventsModel.update(update);
-          console.log('✅ TripPresenter: update successful', update);
+          const updatedEvent = await this.#eventsModel.update(update);
+          console.log('[TripPresenter] update success. updatedEvent:', updatedEvent);
+
+          if (!this.#tripEventsPresenter.editForm && update.isFavorite !== undefined) {
+            console.log('[TripPresenter] updateFavorite called');
+            this.#tripEventsPresenter.updateFavorite(updatedEvent.id, updatedEvent.isFavorite);
+          } else {
+            console.log('[TripPresenter] editForm open or not a favorite toggle, skip updateFavorite');
+          }
+
         } catch(err) {
-          console.error('❌ TripPresenter: update error', err, update);
-          this.#tripEventsPresenter.setAborting();
+          console.error('[TripPresenter] update error', err);
+
+          if (this.#tripEventsPresenter.editForm) {
+            console.log('[TripPresenter] setAborting()');
+            this.#tripEventsPresenter.setAborting();
+          } else {
+            console.log('[TripPresenter] shakeEventCard()');
+
+          if (update.isFavorite !== undefined) {
+            const originalEvent = this.#eventsModel.findById(update.id);
+            console.log('[TripPresenter] rollback favorite to:', originalEvent.isFavorite);
+            this.#tripEventsPresenter.updateFavorite(originalEvent.id, originalEvent.isFavorite);
+          }
+
+            this.#tripEventsPresenter.shakeEventCard(update.id);
+          }
         }
         break;
+
 
       case UserAction.ADD_EVENT:
         this.#newEventPresenter.setSaving();
