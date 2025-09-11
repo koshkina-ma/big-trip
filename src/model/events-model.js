@@ -57,26 +57,27 @@ export default class EventsModel extends Observable {
   }
 
   async update(updatedEvent) {
-    // const index = this.#events.findIndex((event) => event.id === updatedEvent.id);
-    // if (index === -1) {
-    //   throw new Error('Event not found');
-    // }
-    // try {
-    //   console.log('[EventsModel.update] sending:', updatedEvent);
-    //   const response = await this.#eventsApiService.updateEvent(updatedEvent);
-    //   console.log('[EventsModel.update] received:', response);
-    //   const updatedEventFromServer = this.#adaptToClient(response);
+    const index = this.#events.findIndex((event) => event.id === updatedEvent.id);
+    if (index === -1) {
+      throw new Error('Event not found');
+    }
+    try {
+      console.log('[EventsModel.update] sending:', updatedEvent);
+      const response = await this.#eventsApiService.updateEvent(updatedEvent);
+      console.log('[EventsModel.update] received:', response);
+      const updatedEventFromServer = this.#adaptToClient(response);
 
-    //   this.#events = [
-    //     ...this.#events.slice(0, index),
-    //     updatedEventFromServer,
-    //     ...this.#events.slice(index + 1)
-    //   ];
-    //   this._notify(UpdateType.MINOR, updatedEventFromServer);
-    // } catch(err) {
-    //   throw new Error(`Can't update event: ${err.message}`);
-    // }
-     return Promise.reject(new Error('Simulated server error'));
+      this.#events = [
+        ...this.#events.slice(0, index),
+        updatedEventFromServer,
+        ...this.#events.slice(index + 1)
+      ];
+      this._notify(UpdateType.MINOR, updatedEventFromServer);
+      return updatedEventFromServer;
+    } catch(err) {
+      throw new Error(`Can't update event: ${err.message}`);
+    }
+    //  return Promise.reject(new Error('Simulated server error'));
   }
 
   async add(newEvent) {

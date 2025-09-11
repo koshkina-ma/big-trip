@@ -6,6 +6,7 @@ dayjs.extend(duration);
 dayjs.extend(isSameOrBefore);
 
 const ROUTE_DATE_FORMAT = 'MMM DD';
+const HEADER_DATE_FORMAT = 'DD MMM';
 const EDIT_POINT_DATE_FORMAT = 'DD/MM/YY HH:mm';
 
 function getFormattedDate(date) {
@@ -14,6 +15,10 @@ function getFormattedDate(date) {
 
 function getEditPointFormattedDate(date) {
   return dayjs(date).format(EDIT_POINT_DATE_FORMAT);
+}
+
+function getHeaderFormattedDate(date) {
+  return dayjs(date).format(HEADER_DATE_FORMAT).toUpperCase();
 }
 
 function formatRouteTime(startDate, endDate) {
@@ -93,6 +98,7 @@ function calculateTotalCost(points) {
 
 export {
   getFormattedDate,
+  getHeaderFormattedDate,
   getEditPointFormattedDate,
   formatRouteTime,
   formatTripTitle,

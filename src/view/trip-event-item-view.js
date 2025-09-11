@@ -78,13 +78,30 @@ export default class TripEventItemView extends AbstractView {
     this.#handleRollupClick(evt);
   };
 
-#favoriteClickHandler = (evt) => {
-  evt.preventDefault();
-  console.log('[TripEventItemView] favorite clicked. current isFavorite:', this.#event.isFavorite);
-  if (this.#handleFavoriteClick) {
-    this.#handleFavoriteClick(this.#event);
-  }
-};
+
+  #favoriteClickHandler = (evt) => {
+    evt.preventDefault();
+
+    //TODO это помогало не менять вид кнопки сразу при клике const btn = this.element.querySelector('.event__favorite-btn');
+    // console.log('[TripEventItemView] favorite clicked. current isFavorite:', this.#event.isFavorite, 'button classes BEFORE:', btn.className);
+
+    if (this.#handleFavoriteClick) {
+      this.#handleFavoriteClick(this.#event);
+    }
+
+    // TODO продолжение --- Снимаем фокус с кнопки — часто именно фокус/:active даёт "мгновенное" изменение вида
+    // try {
+    //   btn.blur();
+    // } catch (e) { /* ignore */ }
+
+    // // Для диагностики: проверим классы в следующем тике
+    // setTimeout(() => {
+    //   console.log('[TripEventItemView] button classes AFTER click (next tick):', btn.className);
+    // }, 0);
+
+    this.element.querySelector('.event__favorite-btn')?.blur();
+
+  };
 
 
   updateFavorite(isFavorite) {

@@ -213,11 +213,11 @@ export default class TripPresenter {
           } else {
             console.log('[TripPresenter] shakeEventCard()');
 
-          if (update.isFavorite !== undefined) {
-            const originalEvent = this.#eventsModel.findById(update.id);
-            console.log('[TripPresenter] rollback favorite to:', originalEvent.isFavorite);
-            this.#tripEventsPresenter.updateFavorite(originalEvent.id, originalEvent.isFavorite);
-          }
+            if (update.isFavorite !== undefined) {
+              const originalEvent = this.#eventsModel.findById(update.id);
+              console.log('[TripPresenter] rollback favorite to:', originalEvent.isFavorite);
+              this.#tripEventsPresenter.updateFavorite(originalEvent.id, originalEvent.isFavorite);
+            }
 
             this.#tripEventsPresenter.shakeEventCard(update.id);
           }

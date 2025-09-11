@@ -122,13 +122,14 @@ export default class TripEventsPresenter {
   #handleFavoriteToggle = (event) => {
     console.log('[TripEventsPresenter] #handleFavoriteToggle called. event.id:', event.id, 'current isFavorite:', event.isFavorite);
     //TODO бьюсь с избранным
-    // const updatedEvent = { ...event, isFavorite: !event.isFavorite };
-    //  console.log('[TripEventsPresenter] sending updatedEvent to presenter:', updatedEvent);
+    const updatedEvent = { ...event, isFavorite: !event.isFavorite };
+     console.log('[TripEventsPresenter] sending updatedEvent to presenter:', updatedEvent);
+
     this.#onDataChange(
       UserAction.UPDATE_EVENT,
       UpdateType.PATCH,
-      event
-      //updatedEvent
+      //event
+      updatedEvent
     );
   };
 

@@ -1,6 +1,6 @@
 import TripMainView from '../view/trip-main-view.js';
 import TripCostView from '../view/trip-cost-view.js';
-import { formatTripTitle, formatTripDates, calculateTotalCost } from '../utils/utils.js';
+import { formatTripTitle, calculateTotalCost, getHeaderFormattedDate } from '../utils/utils.js';
 import { render } from '../framework/render.js';
 import { UpdateType } from '../const.js';
 
@@ -32,7 +32,8 @@ export default class TripInfoPresenter {
 
     this.#tripMainComponent = new TripMainView({
       title: formatTripTitle(this.#currentEvents),
-      dateRange: formatTripDates(this.#currentEvents),
+      dateRange: `${getHeaderFormattedDate(this.#currentEvents[0].dateFrom)} — ${getHeaderFormattedDate(this.#currentEvents[this.#currentEvents.length - 1].dateTo)}`
+
     });
 
     this.#tripCostComponent = new TripCostView(calculateTotalCost(this.#currentEvents));
