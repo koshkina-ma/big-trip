@@ -37,7 +37,7 @@ const tripPresenter = new TripPresenter({
   filterModel: filterModel
 });
 
-const filterPresenter = new FilterPresenter({ //TODO фильтры
+const filterPresenter = new FilterPresenter({
   container: filtersContainer,
   filters: filters,
   filterModel: filterModel,
